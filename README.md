@@ -27,6 +27,9 @@ python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl
 
+# 1b) Inspect a run (group failures, show examples)
+python -m course.inspect_run --run runs/<your_run_dir> --only-fails
+
 # 2) Run selection demo (Loop B, Best-of-N)
 python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
