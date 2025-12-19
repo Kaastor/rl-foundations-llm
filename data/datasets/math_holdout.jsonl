@@ -1,0 +1,10 @@
+{"id": "holdout-0001", "prompt": "Compute 12+9. Output exactly one line: Final: <int>.", "expected_answer": 21}
+{"id": "holdout-0002", "prompt": "Compute 13+16. Output exactly one line: Final: <int>.", "expected_answer": 29}
+{"id": "holdout-0003", "prompt": "Compute 14+4. Output exactly one line: Final: <int>.", "expected_answer": 18}
+{"id": "holdout-0004", "prompt": "Compute 15+11. Output exactly one line: Final: <int>.", "expected_answer": 26}
+{"id": "holdout-0005", "prompt": "Compute 16+18. Output exactly one line: Final: <int>.", "expected_answer": 34}
+{"id": "holdout-0006", "prompt": "Compute 17+6. Output exactly one line: Final: <int>.", "expected_answer": 23}
+{"id": "holdout-0007", "prompt": "Compute 18+13. Output exactly one line: Final: <int>.", "expected_answer": 31}
+{"id": "holdout-0008", "prompt": "Compute 19+1. Output exactly one line: Final: <int>.", "expected_answer": 20}
+{"id": "holdout-0009", "prompt": "Compute 20+8. Output exactly one line: Final: <int>.", "expected_answer": 28}
+{"id": "holdout-0010", "prompt": "Compute 21+15. Output exactly one line: Final: <int>.", "expected_answer": 36}
