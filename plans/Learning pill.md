@@ -156,13 +156,13 @@ When this pill says… | In the repo, look here…
 
 ---|---
 
-**Reward spec / verifier** | `course/score.py` (search for `REWARD_SPEC`, `SCORER_VERSION`, and `_parse_final_line`)
+**Reward spec / verifier** | `course/core/scoring.py` (search for `REWARD_SPEC`, `SCORER_VERSION`, and `_parse_final_line`)
 
 **Loop A: evaluation (measurement)** | `course/eval.py` writes `runs/.../results.jsonl` + `summary.json`
 
 **Inspecting failures (without vibes)** | `course/inspect_run.py` groups failures + prints concrete examples
 
-**Loop B: selection (Best-of-N)** | `course/selection_demo.py` (see `pick_best()` and the deterministic tie-break)
+**Loop B: selection (Best-of-N)** | `course/selection_demo.py` (see `pick_best(example, samples, scorer=...)` and the deterministic tie-break)
 
 **Loop C: learning (mechanism microscope)** | `course/bandit_train.py` (see `reinforce_step`, `baseline`, `advantage`)
 
@@ -796,7 +796,7 @@ python -m course.token_inspect "Final: 323"
 
 ```bash
 
-python -m course.token_inspect "Final: 323"
+python -m course.token_inspect "Final:  323"
 
 ```
 
@@ -1233,6 +1233,9 @@ Open:
 - What happens to KL drift?
 
 - In LLM terms, what does "drift" often look like in outputs?
+
+> [!NOTE]
+> **When will you see KL metrics?** The KL drill above computes KL divergence internally, but if you're running evaluation on your own rollouts, `mean_kl_est` will only appear in summary metrics when your completions file includes logprob bookkeeping fields like `sum_logprob` and `sum_ref_logprob`. Most basic rollouts don't include these by default.
 
   
   
