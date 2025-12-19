@@ -1,10 +1,17 @@
-# RL Foundations for LLMs — Course Harness (CPU, local, verifiable rewards)
+# RL Foundations for LLMs — Course Harness (minimal core library, production-ish artifacts)
 
-This repo is the **teacher-provided harness** for the course described in the prompt.
-It is intentionally small and boring — because the goal is **measurement discipline**,
-not “ship an RL stack”.
+This repository is a **scope-limited** teaching harness for Reinforcement Learning (RL) ideas as they show up in LLM systems.
 
-Everything revolves around one interface:
+It is intentionally small and boring.
+
+The goal is not to ship an RL stack — it is to teach the habits that make RL/LLM work **trustworthy**:
+
+- treat reward/eval like a **measurement instrument**
+- keep the instrument stable when comparing runs (Locked Room Rule)
+- save artifacts so failures have names, not vibes
+- separate **selection gains** (best-of-N) from **learning gains** (policy changes)
+
+Everything revolves around one contract:
 
 ```py
 score(example, completion) -> {"reward": float, "details": dict}
@@ -14,49 +21,64 @@ Where:
 
 - `example` contains `{id, prompt, expected_answer}`
 - `completion` is the model output string
-- the scorer **does not solve math** — it only verifies by comparing the parsed final answer
-  to `expected_answer`.
+- the scorer does **not** solve math — it only verifies by comparing the parsed final answer to `expected_answer`
 
 ## Quickstart
 
 From the repo root:
 
 ```bash
-# 1) Run eval (Loop A) on teacher-provided frozen rollouts
+# Loop A: eval frozen rollouts
 python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl
 
-# 1b) Inspect a run (group failures, show examples)
+# Inspect a run: group failures and show examples
 python -m course.inspect_run --run runs/<your_run_dir> --only-fails
 
-# 2) Run selection demo (Loop B, Best-of-N)
+# Loop B: Best-of-N selection (uses student-editable selection policy)
 python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4
 
-# 3) Run toy bandit learning (Loop C, conceptual)
-python -m course.bandit_train --slow --steps 15
-python -m course.bandit_train --steps 500 --baseline
+# Gate candidate vs baseline (production-ish “should we promote?” check)
+python -m course.gate \
+  --baseline runs/<baseline_eval_run> \
+  --candidate runs/<candidate_eval_run> \
+  --min-delta 0.00
 
-# 4) (Optional) KL tradeoff demo (categorical policy, no LLMs)
+# Loop C: tiny policy-gradient microscope (no LLMs)
+python -m course.bandit_train --steps 200 --baseline
+
+# Optional: KL tradeoff demo (no LLMs)
 python -m course.kl_tradeoff_demo --plot
 ```
 
 Each command creates a new folder under `runs/` containing:
 
-- raw per-example scored records (`results.jsonl`)
-- `summary.json` and `summary.md`
-- run metadata (dataset/scorer versions, seeds, etc.)
+- `results.jsonl` — per-example scored records
+- `summary.json` and `summary.md` — human + machine summaries
+- `manifest.json` — environment + input hashes (production-ish reproducibility)
 
 ## Repo layout (what to touch)
 
-- `course/` — teacher-owned code. Read it, inspect it, but avoid refactors.
-- `tests/` — **student adds tests here** (especially in Milestone 4/5).
-- `notes/` — student-written notes (not included by default; add as you go).
-- `data/` — teacher-provided datasets + frozen rollouts.
-- `runs/` — generated outputs (safe to delete).
+- `course/core/` — **tiny library**: IO, schemas, scoring contract, eval/selection logic, artifacts
+- `course/` — CLI entrypoints (`python -m course.eval`, etc.)
+- `course/assignments/` — **student-editable surfaces** (start here)
+- `tests/` — tests (optional but recommended)
+- `data/` — teacher-provided datasets and frozen rollouts
+- `runs/` — generated outputs (safe to delete)
+
+## Assignments
+
+This harness is set up so students can change behavior without refactoring infrastructure.
+
+Example: Best-of-N selection policy lives in:
+
+- `course/assignments/selection_policy.py`
+
+All scripts in `course/` call into `course/core/`.
 
 ## File formats (JSONL)
 
@@ -68,13 +90,21 @@ Each line:
 {"id":"dev-0001","prompt":"Compute 17*19. Output exactly one line: Final: <int>","expected_answer":323}
 ```
 
-### Frozen rollouts (`data/rollouts/frozen_rollouts_*.jsonl`)
+### Completions (`data/rollouts/frozen_rollouts_*.jsonl`)
 
 Each line:
 
 ```json
 {"id":"dev-0001","completion":"Final: 323"}
 ```
+
+Optional production-ish metadata is allowed:
+
+```json
+{"id":"dev-0001","completion":"Final: 323","sum_logprob":-12.34,"sum_ref_logprob":-12.80}
+```
+
+(Synonyms accepted: `logprob`/`ref_logprob`/`total_logprob`/`total_ref_logprob`.)
 
 ### Selection pack (`data/rollouts/selection_pack_*.jsonl`)
 
@@ -84,11 +114,11 @@ Each line:
 {"id":"dev-0001","samples":["Final: 323","Final:  323","The answer is 323.","Final: 999"]}
 ```
 
-## Design notes (why it’s built this way)
+Samples may also be objects with metadata:
 
-- Deterministic scoring is treated like production code: versioned, tested, inspectable.
-- Scripts are small and explicit; outputs are readable JSONL.
-- No RL frameworks. No training infra. The point is to understand the loop and the failure modes.
+```json
+{"id":"dev-0001","samples":[{"completion":"Final: 323","logprob":-3.2},"Final: 999"]}
+```
 
 ## Running tests
 
@@ -98,4 +128,4 @@ If you have `pytest`:
 pytest -q
 ```
 
-If you don’t, you can still run the course scripts — tests are optional but strongly recommended.
+(Tests are optional; the scripts run without installing anything.)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from typing import Any, List, Tuple
 
 
 def _try_tiktoken(text: str) -> tuple[str, list[tuple[int, str]]]:
@@ -27,9 +26,10 @@ def tokenize(text: str) -> tuple[str, list[tuple[int, str]]]:
     """Tokenize text for inspection.
 
     Prefer a real LLM tokenizer (tiktoken). If unavailable, fall back to UTF-8 bytes.
-    The fallback is still useful for seeing the token/text boundary and whitespace quirks,
-    but it will not match real model tokenization.
+    The fallback is still useful for seeing whitespace quirks, but it will not match
+    real model tokenization.
     """
+
     try:
         return _try_tiktoken(text)
     except Exception:
@@ -37,7 +37,7 @@ def tokenize(text: str) -> tuple[str, list[tuple[int, str]]]:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Inspect tokenization for a string (real tokenizer if available)." )
+    p = argparse.ArgumentParser(description="Inspect tokenization for a string (real tokenizer if available).")
     p.add_argument("text", type=str, nargs="?", default=None, help="Text to tokenize. If omitted, reads stdin.")
     args = p.parse_args()
 
@@ -54,7 +54,6 @@ def main() -> None:
     print(f"Token count: {len(toks)}\n")
 
     for idx, (tok_id, tok_str) in enumerate(toks):
-        # Show whitespace clearly
         shown = tok_str.replace("\n", "\\n").replace("\t", "\\t")
         print(f"{idx:03d}  id={tok_id:<6}  token={shown!r}")
 

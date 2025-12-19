@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Sequence
 
-from course.io_utils import make_run_dir, write_json, write_jsonl, atomic_write_text, utc_now_iso
+from course.core.io import atomic_write_text, make_run_dir, utc_now_iso, write_json, write_jsonl, write_manifest
 
 
 def softmax(logits: Sequence[float]) -> list[float]:
@@ -53,16 +52,7 @@ def reinforce_step(
     advantage: float,
     lr: float,
 ) -> list[float]:
-    """One REINFORCE update for a categorical softmax policy.
-
-    For a selected action a:
-        grad log pi(a) = one_hot(a) - pi
-
-    Update:
-        theta <- theta + lr * advantage * (one_hot(a) - pi)
-
-    This is exactly the “increase log-prob of sampled actions if advantage>0” story.
-    """
+    """One REINFORCE update for a categorical softmax policy."""
     k = len(theta)
     updated = theta[:]
     for i in range(k):
@@ -90,8 +80,10 @@ def run_bandit_train(
     )
 
     theta = [0.0 for _ in env.action_names]
+
+    # Running-mean baseline over *previous* rewards.
     baseline = 0.0
-    n = 0
+    n_base = 0
 
     logs: list[dict[str, Any]] = []
     rewards: list[float] = []
@@ -106,19 +98,16 @@ def run_bandit_train(
         action_idx = sample_categorical(probs, rng)
         reward = env.reward(action_idx, rng)
 
-        # Running-mean baseline (simple, deterministic, no critic).
+        # IMPORTANT: compute advantage against the baseline *before* updating baseline.
         if use_baseline:
-            n += 1
-            baseline = baseline + (reward - baseline) / n
+            advantage = reward - baseline
+            n_base += 1
+            baseline = baseline + (reward - baseline) / n_base
         else:
+            advantage = reward
             baseline = 0.0
 
-        advantage = reward - baseline
-
-        # Update.
-        theta_new = reinforce_step(theta, action_idx, probs, advantage, lr)
-        theta = theta_new
-
+        theta = reinforce_step(theta, action_idx, probs, advantage, lr)
         rewards.append(reward)
 
         log = {
@@ -135,16 +124,19 @@ def run_bandit_train(
 
         if slow:
             probs_str = ", ".join(f"{name}:{p:.3f}" for name, p in zip(env.action_names, probs))
-            print(f"step {t:03d} | pi=({probs_str}) | a={env.action_names[action_idx]} | r={reward:.0f} | b={baseline:.3f} | A={advantage:.3f}")
+            print(
+                f"step {t:03d} | pi=({probs_str}) | a={env.action_names[action_idx]} | "
+                f"r={reward:.0f} | b={baseline:.3f} | A={advantage:.3f}"
+            )
 
-    # Summary metrics
     mean_reward = sum(rewards) / len(rewards) if rewards else 0.0
     last_k = min(100, len(rewards))
     mean_last = sum(rewards[-last_k:]) / last_k if last_k else 0.0
 
+    created_utc = utc_now_iso()
     summary = {
         "run": {
-            "created_utc": utc_now_iso(),
+            "created_utc": created_utc,
             "script": "bandit_train",
             "seed": seed,
             "steps": steps,
@@ -166,7 +158,7 @@ def run_bandit_train(
 
     md = []
     md.append("# Bandit training demo (REINFORCE, categorical policy)\n\n")
-    md.append(f"- Created (UTC): `{summary['run']['created_utc']}`\n")
+    md.append(f"- Created (UTC): `{created_utc}`\n")
     md.append(f"- Steps: `{steps}`\n")
     md.append(f"- Seed: `{seed}`\n")
     md.append(f"- Learning rate: `{lr}`\n")
@@ -181,6 +173,14 @@ def run_bandit_train(
         "change the expected update direction (it changes noise).\n"
     )
     atomic_write_text(out_dir / "summary.md", "".join(md))
+
+    # A manifest is useful even for demos.
+    write_manifest(
+        out_dir,
+        created_utc=created_utc,
+        script="bandit_train",
+        args={"steps": steps, "seed": seed, "lr": lr, "baseline": use_baseline, "slow": slow},
+    )
 
     return summary
 

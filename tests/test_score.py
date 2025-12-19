@@ -13,6 +13,7 @@ def test_correct_exact_format():
     assert r["reward"] == 1.0
     assert r["details"]["parse"]["format_ok"] is True
     assert r["details"]["match"] is True
+    assert r["details"]["result"]["code"] == "ok"
 
 
 def test_wrong_answer_parses_but_mismatch():
@@ -20,12 +21,14 @@ def test_wrong_answer_parses_but_mismatch():
     assert r["reward"] == 0.0
     assert r["details"]["parse"]["format_ok"] is True
     assert r["details"]["match"] is False
+    assert r["details"]["result"]["code"] == "wrong_answer"
 
 
 def test_missing_prefix_fails():
     r = score(ex(323), "323")
     assert r["reward"] == 0.0
     assert r["details"]["parse"]["error_code"] == "missing_prefix"
+    assert r["details"]["result"]["code"] == "missing_prefix"
 
 
 def test_extra_punctuation_fails():
@@ -71,4 +74,5 @@ def test_total_even_if_completion_str_raises():
 
     r = score(ex(323), Bad())
     assert r["reward"] == 0.0
-    assert "completion_error" in r["details"].get("example_warnings", {}) or r["details"]["completion"]["raw_preview"] == ""
+    # Implementation may record the error in warnings, but must not crash.
+    assert r["details"]["completion"]["raw_preview"] == ""

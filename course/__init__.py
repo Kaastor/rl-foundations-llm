@@ -1,9 +1,14 @@
-"""Teacher-provided harness for the RL Foundations for LLMs course.
+"""RL Foundations for LLMs — course harness.
 
-The course is intentionally scope-limited:
+This repository is intentionally scope-limited:
 - single-turn task
 - deterministic verifier (rule-based reward)
 - no RL frameworks
 
-All public functionality should be reachable via `python -m course.<script>`.
+The *core* reusable library lives in `course.core`.
+Student-editable code lives in `course.assignments`.
+
+CLI entrypoints are exposed via `python -m course.<script>`.
 """
+
+__all__ = ["core", "assignments"]

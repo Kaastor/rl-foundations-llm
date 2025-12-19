@@ -4,9 +4,9 @@ import argparse
 import csv
 import math
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Sequence
 
-from course.io_utils import make_run_dir, write_json, atomic_write_text, utc_now_iso
+from course.core.io import atomic_write_text, make_run_dir, utc_now_iso, write_json, write_manifest
 
 
 def normalize(probs: Sequence[float]) -> list[float]:
@@ -33,16 +33,8 @@ def expected_reward(p: Sequence[float], r: Sequence[float]) -> float:
 
 
 def constrained_optimal_policy(pi_ref: Sequence[float], rewards: Sequence[float], beta: float) -> list[float]:
-    """Closed-form optimum for: max_pi E_pi[r] - beta * KL(pi || pi_ref).
-
-    For beta > 0:
-        pi*(a) ∝ pi_ref(a) * exp(r(a) / beta)
-
-    This is the simplest “KL constraint” mental model.
-    """
+    """Closed-form optimum for: max_pi E_pi[r] - beta * KL(pi || pi_ref)."""
     if beta <= 0:
-        # In the limit beta -> 0+, this collapses to argmax reward while respecting support.
-        # For pedagogy, we clamp to a tiny beta.
         beta = 1e-8
 
     unnorm = [pref * math.exp(r / beta) for pref, r in zip(pi_ref, rewards)]
@@ -51,12 +43,8 @@ def constrained_optimal_policy(pi_ref: Sequence[float], rewards: Sequence[float]
 
 def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
     actions = [f"a{i}" for i in range(6)]
-    # Reference policy: a mild bias toward a0/a1 (think: “pretrained prior”).
     pi_ref = normalize([0.30, 0.25, 0.15, 0.10, 0.10, 0.10])
-
-    # Rewards: the environment/verifier prefers later actions.
     rewards = [0.0, 0.1, 0.4, 0.6, 0.8, 1.0]
-
     betas = [0.05, 0.10, 0.20, 0.35, 0.50, 0.75, 1.00, 1.50, 2.00]
 
     rows: list[dict[str, Any]] = []
@@ -75,7 +63,6 @@ def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
             }
         )
 
-    # Save CSV (easy to chart in any tool)
     csv_path = out_dir / "kl_tradeoff.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -83,8 +70,9 @@ def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
         for r in rows:
             w.writerow([r["beta"], r["expected_reward"], r["kl"]])
 
+    created_utc = utc_now_iso()
     summary = {
-        "run": {"created_utc": utc_now_iso(), "script": "kl_tradeoff_demo"},
+        "run": {"created_utc": created_utc, "script": "kl_tradeoff_demo"},
         "reference_policy": {"actions": actions, "pi_ref": pi_ref},
         "rewards": rewards,
         "rows": rows,
@@ -101,6 +89,8 @@ def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
     md.append("- smaller beta → more reward-seeking, more drift\n\n")
     md.append("See `kl_tradeoff.csv` for the reward/KL curve.\n")
     atomic_write_text(out_dir / "summary.md", "".join(md))
+
+    write_manifest(out_dir, created_utc=created_utc, script="kl_tradeoff_demo")
 
     if plot:
         try:
@@ -125,7 +115,7 @@ def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="KL-constrained policy improvement demo (no LLMs)." )
+    p = argparse.ArgumentParser(description="KL-constrained policy improvement demo (no LLMs).")
     p.add_argument("--outdir", type=Path, default=None, help="Output directory (defaults to runs/kl_<timestamp>)")
     p.add_argument("--plot", action="store_true", help="Write a kl_tradeoff.png (requires matplotlib)")
     args = p.parse_args()

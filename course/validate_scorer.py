@@ -2,17 +2,13 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict
 
-from course.datasets.loader import load_examples, index_by_id
-from course.io_utils import read_jsonl
-from course.score import SCORER_NAME, SCORER_VERSION, score
+from course.core.datasets import index_by_id, load_examples
+from course.core.io import read_jsonl
+from course.core.scoring import SCORER_NAME, SCORER_VERSION, score
 
 
-def validate(
-    dataset_path: Path,
-    golden_path: Path,
-) -> int:
+def validate(dataset_path: Path, golden_path: Path) -> int:
     examples = load_examples(dataset_path)
     ex_by_id = index_by_id(examples)
     gold = read_jsonl(golden_path)
@@ -29,12 +25,18 @@ def validate(
         expected_reward = float(rec.get("expected_reward", 0.0))
 
         out = score(ex_by_id[ex_id], completion)
-        got = float(out["reward"])
+        got = float(out.get("reward", 0.0))
 
         if got != expected_reward:
             failures += 1
-            parse = (out.get("details") or {}).get("parse") or {}
-            print(f"[FAIL] id={ex_id} expected_reward={expected_reward} got={got} error_code={parse.get('error_code')} completion={completion!r}")
+            details = out.get("details") or {}
+            parse = details.get("parse") or {}
+            result = details.get("result") or {}
+            code = result.get("code") or parse.get("error_code")
+            print(
+                f"[FAIL] id={ex_id} expected_reward={expected_reward} got={got} "
+                f"code={code} completion={completion!r}"
+            )
 
     if failures == 0:
         print(f"OK: {golden_path} ({len(gold)} cases) under scorer {SCORER_NAME} v{SCORER_VERSION}")
