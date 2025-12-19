@@ -13,6 +13,7 @@ class RunStats:
     run_dir: Path
     created_utc: str
     dataset_path: str
+    dataset_sha256: str
     scorer_name: str
     scorer_version: str
     n_examples: int
@@ -43,6 +44,7 @@ def load_run_stats(run_dir: Path) -> RunStats:
     run_dir = run_dir.expanduser().resolve()
     summary_path = run_dir / "summary.json"
     results_path = run_dir / "results.jsonl"
+    manifest_path = run_dir / "manifest.json"
     if not summary_path.exists() or not results_path.exists():
         raise FileNotFoundError(f"Run dir must contain summary.json and results.jsonl: {run_dir}")
 
@@ -54,6 +56,14 @@ def load_run_stats(run_dir: Path) -> RunStats:
     dataset_path = str(run.get("dataset_path") or "")
     scorer_name = str(scorer.get("name") or "")
     scorer_version = str(scorer.get("version") or "")
+
+    # Extract dataset SHA256 from manifest.json inputs (first input is dataset).
+    dataset_sha256 = ""
+    if manifest_path.exists():
+        manifest = _read_json(manifest_path)
+        inputs = manifest.get("inputs") or []
+        if inputs and isinstance(inputs[0], dict):
+            dataset_sha256 = str(inputs[0].get("sha256") or "")
 
     records = read_jsonl(results_path)
     n = len(records)
@@ -69,6 +79,7 @@ def load_run_stats(run_dir: Path) -> RunStats:
         run_dir=run_dir,
         created_utc=created_utc,
         dataset_path=dataset_path,
+        dataset_sha256=dataset_sha256,
         scorer_name=scorer_name,
         scorer_version=scorer_version,
         n_examples=n,
@@ -98,10 +109,11 @@ def gate(
             f"(baseline={baseline.scorer_name} v{baseline.scorer_version}, candidate={candidate.scorer_name} v{candidate.scorer_version})"
         )
 
-    if baseline.dataset_path and candidate.dataset_path and baseline.dataset_path != candidate.dataset_path:
+    # Compare dataset by SHA256 hash instead of path string to avoid false rejections.
+    if baseline.dataset_sha256 and candidate.dataset_sha256 and baseline.dataset_sha256 != candidate.dataset_sha256:
         reasons.append(
-            "LockedRoomViolation: dataset_path mismatch "
-            f"(baseline={baseline.dataset_path}, candidate={candidate.dataset_path})"
+            "LockedRoomViolation: dataset_sha256 mismatch "
+            f"(baseline={baseline.dataset_sha256[:16]}..., candidate={candidate.dataset_sha256[:16]}...)"
         )
 
     if baseline.n_examples != candidate.n_examples:

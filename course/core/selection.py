@@ -156,15 +156,6 @@ def selection_demo(
     )
     atomic_write_text(out_dir / "summary.md", "".join(md))
 
-    write_manifest(
-        out_dir,
-        created_utc=created_utc,
-        script="selection_demo",
-        inputs=[dataset_path, samples_path],
-        scorer={"name": SCORER_NAME, "version": SCORER_VERSION},
-        extra={"n": n, "n_missing_samples": missing},
-    )
-
     return summary
 
 
@@ -193,6 +184,7 @@ def run_selection_demo(
 
     if argv is not None or args is not None:
         created = summary.get("run", {}).get("created_utc") or utc_now_iso()
+        n_missing = summary.get("run", {}).get("n_missing_samples", 0)
         write_manifest(
             out_dir,
             created_utc=created,
@@ -201,7 +193,7 @@ def run_selection_demo(
             args=args,
             inputs=[dataset_path, samples_path],
             scorer={"name": SCORER_NAME, "version": SCORER_VERSION},
-            extra={"n": n},
+            extra={"n": n, "n_missing_samples": n_missing},
         )
 
     return out_dir, summary

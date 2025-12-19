@@ -57,11 +57,19 @@ def evaluate_examples(
         reward = float(scored.get("reward", 0.0))
         details = scored.get("details", {})
 
+        # Enforce binary reward assumption.
+        assert reward in (0.0, 1.0), f"Reward must be 0.0 or 1.0, got {reward} for example {ex.id}"
+
         total_reward += reward
 
         # Stable classification for grouping.
         outcome = (details or {}).get("result") or {}
         code = str(outcome.get("code") or "unknown")
+        
+        # Override outcome_code for missing completions to maintain semantic honesty.
+        if missing_completion:
+            code = "missing_completion"
+        
         outcome_codes[code] += 1
 
         results.append(
@@ -81,7 +89,8 @@ def evaluate_examples(
         )
 
     n = len(examples)
-    pass_rate = (total_reward / n) if n else 0.0
+    n_pass = sum(1 for r in results if r["reward"] == 1.0)
+    pass_rate = (n_pass / n) if n else 0.0
 
     # Summaries for failures only (excluding ok)
     failures = {k: v for k, v in outcome_codes.items() if k != "ok"}
@@ -98,8 +107,8 @@ def evaluate_examples(
         "metrics": {
             "mean_reward": pass_rate,
             "pass_rate": pass_rate,
-            "n_pass": int(total_reward),
-            "n_fail": n - int(total_reward),
+            "n_pass": n_pass,
+            "n_fail": n - n_pass,
         },
         "outcomes": {
             "counts": dict(outcome_codes.most_common()),
