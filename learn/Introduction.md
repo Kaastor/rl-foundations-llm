@@ -1,12 +1,10 @@
-Here’s a cohesive “read-this-first” narrative you can treat as the course’s *storyline*. The goal is that, by the end of this narrative, you can hold the whole system in your head like a subway map: a few stations, a few lines, no mystery teleportation.
+# Introduction
 
 ---
 
-## The premise: we’re not “doing RL”, we’re building a feedback machine
-
 An LLM is a probability machine: given a prompt, it doesn’t output *the* answer, it outputs a **distribution over possible completions**.
 
-RL-for-LLMs is what you do when you can’t (or don’t want to) provide the model with a “correct output string” as a label, but you *can* provide **feedback** about the output it produced.
+RL-for-LLMs is what you do when you can’t provide the model with a “correct output string” as a label, but you *can* provide **feedback** about the output it produced.
 
 That feedback might be:
 
