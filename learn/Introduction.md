@@ -6,6 +6,8 @@
 
 A Large Language Model (LLM) functions as a probabilistic system: when provided with a prompt $x$, it does not generate a singular, deterministic answer. Rather, it defines a **conditional probability distribution $P(y | x)$** over possible completions $y$, where each token in the completion is sampled sequentially according to the model's learned distribution.
 
+> **Math translation:** $P(y | x)$ is read as "the probability of $y$ given $x$". It captures the idea that the output $y$ depends entirely on the input context $x$.
+
 Reinforcement Learning for LLMs (RL-for-LLMs) is employed in scenarios where it is not feasible to provide the model with a labeled "correct output string," yet it remains possible to furnish **feedback** regarding the quality of the output it has generated.
 
 This feedback may take various forms:
@@ -37,6 +39,10 @@ Classical reinforcement learning theory describes an "environment" as a Markov D
 2. A **policy** $\pi_\theta(y | x)$ (the LLM parameterized by $\theta$ that samples completions)
 3. A **reward function** $R(x, y)$ (verifier or reward model) that maps (prompt, output) pairs to scalar rewards
 4. Optional constraints (format rules, safety rules, etc.)
+> **Math translation:**
+> * $p(x)$: How often different prompts appear in the real world (or your dataset).
+> * $\pi_\theta(y | x)$: The AI model itself. $\theta$ represents the billions of parameters (weights) inside the neural network.
+> * $R(x, y)$: The rulebook. It takes the prompt and the answer, repeats them, and spits out a score.
 
 This course makes these components explicit and rigorously defined, creating a simplified MDP where:
 - State space: the prompt $x$
@@ -66,7 +72,9 @@ Formally, this implements $R: (X, Y) \to \mathbb{R}$, where:
 * `example` $\in X$ represents one dataset item (prompt + expected answer + identifier)
 * `completion` $\in Y$ represents the model's generated output
 * `reward` $\in \{0, 1\}$ is the scalar reward signal (binary in this framework)
-* `details` contains diagnostic information (parse success status, error codes, extracted values, etc.)
+* `difficulty` contains diagnostic information (parse success status, error codes, extracted values, etc.)
+
+> **Math translation:** $R: (X, Y) \to \mathbb{R}$ means "R is a function that maps a pair (from set X and set Y) to a Real number." In our case, the real number is just 0 or 1.
 
 This contract serves as the "measurement instrument." All other operations constitute different methods of **utilizing** this instrument to compute objectives, metrics, or learning signals.
 
@@ -92,6 +100,11 @@ This loop involves no optimization, no learning, and no sophisticated techniques
 
 * **Mean reward**: $\bar{R} = (1/N) \sum_{i=1}^N R(x_i, y_i)$
 * **Pass rate** (for binary rewards): $\hat{P}_{\text{pass}} = (1/N) \sum_{i=1}^N \mathbb{1}[R(x_i, y_i) = 1]$
+
+> **Math translation:**
+> * $\Sigma$ (Sigma) means "sum up all the values".
+> * $\mathbb{1}[\dots]$ is the **Indicator Function**. It equals $1$ if the condition inside is true, and $0$ if false.
+> * So, $\hat{P}_{\text{pass}}$ is just counting how many times the model got it right, divided by the total number of attempts $N$.
 * **Failure mode distribution**: Group by error type and compute proportions
 
 Practical outputs include:
@@ -117,6 +130,9 @@ Rather than generating a single completion per prompt, you generate **N samples*
 
 **$y^* = \text{argmax}_{y \in \{y_1,\dots,y_n\}} R(x, y)$**
 
+> **Math translation:** $\text{argmax}$ asks "which argument (input) produces the maximum output?"
+> In plain English: We generate $n$ options. We score them all. We pick the one ($y^*$) that got the highest score. We don't change the model; we just cherry-pick its best work.
+
 This approach is known as Best-of-N sampling (along with related techniques: reranking, rejection sampling, verifier-guided search).
 
 Key concept:
@@ -129,6 +145,9 @@ Key concept:
 
 * **pass@1** = $\mathbb{P}[R(x, y) = 1 \mid y \sim \pi_\theta(\cdot|x)]$ — probability a single sample succeeds
 * **pass@k** = $\mathbb{P}[\max\{R(x, y_1), \dots, R(x, y_k)\} = 1 \mid y_1,\dots,y_k \sim \pi_\theta(\cdot|x)]$ — probability at least one of k samples succeeds
+
+> **Math translation:** $ \sim $ means "sampled from". $\pi_\theta(\cdot|x)$ is the model's distribution.
+> pass@k asks: "If I let the model try $k$ times, what is the probability that *at least one* of those tries is correct?"
 
 Selection improves pass@N. It may have minimal impact on pass@1, since $\pi_\theta$ itself is unchanged.
 
@@ -156,6 +175,11 @@ The fundamental conceptual transformation is:
 
 * Treat the model as a **policy** $\pi_\theta(y | x)$ parameterized by weights $\theta$
 * Define the objective as **expected reward** under that policy: $J(\theta) = \mathbb{E}_{x \sim p(x), y \sim \pi_\theta(\cdot|x)}[R(x, y)]$
+
+> **Math translation:**
+> * $\mathbb{E}$ stands for **Expectation** (the learned mathematical average).
+> * The goal $J(\theta)$ is simply "the average score we expect the model to get."
+> * $\nabla_\theta$ (Nabla or Gradient) points in the direction of steepest ascent. We want to climb the hill of higher rewards.
 * Employ policy gradient methods to maximize $J(\theta)$ by adjusting $\theta$ in the direction $\nabla_\theta J(\theta)$
 
 ---
@@ -174,6 +198,8 @@ The REINFORCE algorithm (Williams, 1992) is a Monte Carlo policy gradient method
 The policy gradient updates parameters according to:
 
 **$\nabla_\theta J(\theta) \approx (R - b) \cdot \nabla_\theta \log \pi_\theta(y | x)$**
+
+> **Math translation:** This formula says: "Take the gradient of the log-probability of the action we just took. Scale it by how good the result was ($R-b$). If the result was better than usual (positive), push the gradient to make this action *more* likely. If worse (negative), push it to make it *less* likely."
 
 where:
 * **$R$** is the observed reward for completion $y$
@@ -221,6 +247,12 @@ The constrained objective becomes:
 
 **$J_{KL}(\theta) = \mathbb{E}_{x,y}[R(x, y)] - \beta \cdot \mathbb{E}_x[D_{KL}(\pi_\theta(\cdot|x) || \pi_{\text{ref}}(\cdot|x))]$**
 
+> **Math translation:**
+> * $J_{KL}$ is our new, safer goal.
+> * term 1 ($\mathbb{E}[R]$): "Get high rewards."
+> * term 2 ($\beta \cdot D_{KL}$): "Minus a penalty for being weird."
+> * $D_{KL}$ measures the "distance" between the new model behavior and the old one. We want to maximize reward, but minimize distance.
+
 where:
 * **$D_{KL}$** is the Kullback-Leibler divergence: $D_{KL}(\pi_\theta || \pi_{\text{ref}}) = \mathbb{E}_{y \sim \pi_\theta}[\log \pi_\theta(y|x) - \log \pi_{\text{ref}}(y|x)]$
 * **$\beta$** is the KL penalty coefficient controlling the strength of regularization
@@ -254,6 +286,11 @@ A significant source of confusion in LLM reinforcement learning arises from the 
 where each token probability $\pi_\theta(y_i | \text{context})$ is computed via a softmax over $V$:
 
 **$\pi_\theta(y_i = v | \text{context}) = \frac{\exp(f_\theta(v, \text{context}))}{\sum_{v' \in V} \exp(f_\theta(v', \text{context}))}$**
+
+> **Math translation:** This is the **Softmax** function.
+> * $f_\theta$ outputs raw numbers (logits) which can be negative or huge.
+> * $\exp$ (exponential) makes everything positive.
+> * Dividing by the sum $\sum$ guarantees that all the numbers add up to exactly 1.0, making them valid probabilities.
 
 Two consequences that should be understood before examining implementation code:
 
