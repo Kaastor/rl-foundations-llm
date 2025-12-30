@@ -18,7 +18,12 @@ This feedback may take various forms:
 * Specification conformance ("This matches a spec")
 * Safety assessments ("This is safe")
 
-In this course, the feedback mechanism has been deliberately designed to be deterministic and straightforward: **a verifier** evaluates whether the model's completion contains a correctly formatted final integer that corresponds to the expected answer.
+In this course, the feedback mechanism is implemented as **a verifier** (also called a **scorer**). The verifier is a deterministic program that serves a dual purpose:
+
+1. **A Measurement Instrument (The "Checker")**: It provides a truthful, objective report on whether the model succeeded. It is your "red pen" for evaluation.
+2. **A Shaping Mechanism (The "Gate")**: It defines the environment's rewards. Because RL optimizes for reward, the verifier acts as a gate that "shapes" the model's behavior toward the desired goal.
+
+For the anchor project, the verifier evaluates whether the model's completion contains a correctly formatted final integer that corresponds to the expected answer.
 
 The rationale for this simplicity is pedagogical: deterministic feedback allows students to observe the underlying mechanism clearly, without the confounding complexity introduced by a learned reward model.
 
@@ -42,7 +47,7 @@ Classical reinforcement learning theory describes an "environment" as a Markov D
 > **Math translation:**
 > * $p(x)$: How often different prompts appear in the real world (or your dataset).
 > * $\pi_\theta(y | x)$: The AI model itself. $\theta$ represents the billions of parameters (weights) inside the neural network.
-> * $R(x, y)$: The rulebook. It takes the prompt and the answer, repeats them, and spits out a score.
+> * $R(x, y)$: The rulebook. It takes the prompt and the answer, reads them, and spits out a score.
 
 This course makes these components explicit and rigorously defined, creating a simplified MDP where:
 - State space: the prompt $x$
@@ -72,7 +77,7 @@ Formally, this implements $R: (X, Y) \to \mathbb{R}$, where:
 * `example` $\in X$ represents one dataset item (prompt + expected answer + identifier)
 * `completion` $\in Y$ represents the model's generated output
 * `reward` $\in \{0, 1\}$ is the scalar reward signal (binary in this framework)
-* `difficulty` contains diagnostic information (parse success status, error codes, extracted values, etc.)
+* `details` contains diagnostic information (parse success status, error codes, extracted values, etc.)
 
 > **Math translation:** $R: (X, Y) \to \mathbb{R}$ means "R is a function that maps a pair (from set X and set Y) to a Real number." In our case, the real number is just 0 or 1.
 
@@ -137,7 +142,7 @@ This approach is known as Best-of-N sampling (along with related techniques: rer
 
 Key concept:
 
-* The model's capabilities (the distribution πθ) do not improve.
+* The model's capabilities (the distribution $\pi_\theta$) do not improve.
 * You are simply exploring a larger portion of what it already knows how to generate.
 * This is inference-time compute scaling, not training-time improvement.
 
@@ -177,7 +182,7 @@ The fundamental conceptual transformation is:
 * Define the objective as **expected reward** under that policy: $J(\theta) = \mathbb{E}_{x \sim p(x), y \sim \pi_\theta(\cdot|x)}[R(x, y)]$
 
 > **Math translation:**
-> * $\mathbb{E}$ stands for **Expectation** (the learned mathematical average).
+> * $\mathbb{E}$ stands for **Expectation** (the mathematical average).
 > * The goal $J(\theta)$ is simply "the average score we expect the model to get."
 > * $\nabla_\theta$ (Nabla or Gradient) points in the direction of steepest ascent. We want to climb the hill of higher rewards.
 * Employ policy gradient methods to maximize $J(\theta)$ by adjusting $\theta$ in the direction $\nabla_\theta J(\theta)$
@@ -260,7 +265,7 @@ where:
 Intuition:
 
 * Reward term says "move in this direction to maximize R."
-* KL penalty says "but don't deviate too far from πref."
+* KL penalty says "but don't deviate too far from $\pi_{\text{ref}}$."
 
 This serves multiple purposes beyond "safety":
 
