@@ -4,7 +4,7 @@ This walkthrough follows the assignments in `docs/learn/Project.md`. Each sectio
 
 Note: All commands were run with `python3.11` because `python3` defaults to 3.8 on this machine and fails on `dataclass(slots=True)`.
 
-Note: Student templates live in `*_template.py`. The student repo only contains template versions.
+Note: Paths in this walkthrough match the student repo layout (`course_repo`), which contains only the template versions of assignment files.
 
 ---
 
