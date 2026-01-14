@@ -4,7 +4,7 @@
 
 **Czas trwania:** Około 45–60 minut  
 **Format:** Praktyczna demonstracja terminalowa z interaktywną dyskusją  
-**Cele uczenia:** Ustanowienie fundamentalnego frameworku konceptualnego przed kontaktem studentów z kodem
+**Cele:** wspólne ramy pojęciowe przed pracą z kodem
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### Wymagania techniczne
 
-Zweryfikuj spełnienie następujących warunków przed rozpoczęciem sesji:
+Sprawdź przed sesją:
 
 ```bash
 cd path/to/rl-foundations-llm
@@ -21,15 +21,15 @@ poetry run python -m course.selection_demo --help
 poetry run python -m course.bandit_train --help
 ```
 
-Jeśli którekolwiek polecenie się nie powiedzie, upewnij się, że konfiguracja środowiska Python jest kompletna.
+Jeśli coś nie działa, napraw konfigurację środowiska.
 
 ### Przygotowanie poznawcze
 
-Studenci często przychodzą z następującym modelem mentalnym:
+Studenci często zakładają:
 
 > "Po prostu poinstruujemy model, żeby się poprawił i zmierzymy wyniki."
 
-Celem sesji jest zastąpienie tej intuicji następującym frameworkiem:
+Celem jest zamiana tej intuicji na:
 
 > "Pomiar, selection i learning stanowią trzy odrębne operacje z fundamentalnie różnymi mechanizmami i implikacjami."
 
@@ -37,7 +37,7 @@ Celem sesji jest zastąpienie tej intuicji następującym frameworkiem:
 
 ## Przebieg sesji
 
-### Segment 1: Loop A — Pomiar jako instrumentacja naukowa (15 minut)
+### Segment 1: Loop A — Evaluation (pomiar) jako instrumentacja naukowa (15 minut)
 
 #### Podstawa koncepcyjna
 
@@ -47,9 +47,9 @@ Celem sesji jest zastąpienie tej intuicji następującym frameworkiem:
 
 **Kluczowe punkty koncepcyjne:**
 
-- Scorer funkcjonuje jako instrument naukowy, nie jedynie funkcja użyteczności
-- Gdy metryki zmieniają się między przebiegami, albo policy się zmieniła, ALBO warunki pomiaru się zmieniły
-- Obowiązkiem eksperymentatora jest określenie, które z tych dwóch opcji zachodzi
+- Scorer to instrument pomiarowy, nie funkcja użyteczności
+- Gdy metryki się zmieniają, albo zmieniła się policy, albo warunki pomiaru
+- Twoim zadaniem jest wskazać które
 
 #### Demonstracja na żywo
 
@@ -62,7 +62,7 @@ poetry run python -m course.eval \
   --outdir runs/demo_eval_clean
 ```
 
-Przejdź do katalogu wyjściowego i zbadaj artefakty:
+Otwórz artefakty:
 
 ```bash
 cat runs/demo_eval_clean/manifest.json
@@ -70,13 +70,13 @@ head -5 runs/demo_eval_clean/results.jsonl
 cat runs/demo_eval_clean/summary.json
 ```
 
-**Punkty do dyskusji:**
+**Dyskusja:**
 
 - `manifest.json` zapisuje warunki eksperymentalne (analogicznie do dokumentacji laboratoryjnej)
 - `results.jsonl` zawiera wyniki per przykład
 - `summary.json` dostarcza statystyki zagregowane
 
-#### Demonstracja perturbacji
+#### Sabotage (kontrolowana zmiana)
 
 Wprowadź kontrolowaną modyfikację do datasetu:
 
@@ -99,15 +99,15 @@ poetry run python -m course.gate \
   --min-delta 0.00
 ```
 
-**Oczekiwany wynik:** REJECT z informacjami diagnostycznymi wskazującymi na naruszenie Locked Room.
+**Oczekiwany wynik:** REJECT z informacjami diagnostycznymi wskazującymi na naruszenie Zasady Locked Room.
 
 **Wyjaśnienie instruktora:**
 
-> "Bramka odrzuciła to porównanie. Dlaczego? Ponieważ warunki eksperymentalne różniły się. Metryka się zmieniła, ale nie z powodu jakiejkolwiek zmiany w policy. To jest dokładnie to pomylenie, któremu musimy zapobiec."
+> "Bramka odrzuciła porównanie, bo zmieniły się warunki. Metryka drgnęła bez zmiany policy. To dokładnie pomyłka, której unikamy."
 
 ---
 
-### Segment 2: Loop B — Selection bez learning (15 minut)
+### Segment 2: Loop B — Selection (bez learningu) (15 minut)
 
 #### Podstawa koncepcyjna
 
@@ -117,9 +117,9 @@ poetry run python -m course.gate \
 
 **Kluczowe punkty koncepcyjne:**
 
-- Best-of-N selection wybiera spośród istniejących próbek
-- Leżący u podstaw rozkład prawdopodobieństwa pozostaje niezmieniony
-- Poprawione wyniki wynikają ze zwiększonego wydatku obliczeniowego, nie wyuczonego zachowania
+- Best-of-N wybiera najlepszą próbkę
+- Rozkład policy pozostaje niezmieniony
+- To koszt obliczeń, nie learning
 
 #### Demonstracja na żywo
 
@@ -152,15 +152,15 @@ cat runs/demo_sel_n4/summary.json
 
 **Analiza instruktora:**
 
-> "Pass rate wzrosło z N=1 do N=4. Czy model się czegokolwiek nauczył? Nie. Po prostu zbadaliśmy więcej próbek i wybraliśmy najlepszą. Rozkład prawdopodobieństwa, który wygenerował te próbki, jest niezmieniony."
+> "Pass rate rośnie z N=1 do N=4. Model się nie uczy; wybierasz najlepszą próbkę z tego samego rozkładu."
 
-#### Interaktywna weryfikacja
+#### Weryfikacja deterministyczności
 
-Postaw studentom następujące pytanie:
+Zapytaj studentów:
 
 > "Jeśli zresetujemy i uruchomimy N=4 selection ponownie, czy uzyskamy identyczne wyniki?"
 
-Wykonaj weryfikację:
+Sprawdź:
 
 ```bash
 poetry run python -m course.selection_demo \
@@ -176,7 +176,7 @@ diff runs/demo_sel_n4/results.jsonl runs/demo_sel_n4_repeat/results.jsonl
 
 ---
 
-### Segment 3: Loop C — Learning modyfikuje rozkład (15 minut)
+### Segment 3: Loop C — Learning (zmiana rozkładu) (15 minut)
 
 #### Podstawa koncepcyjna
 
@@ -186,9 +186,9 @@ diff runs/demo_sel_n4/results.jsonl runs/demo_sel_n4_repeat/results.jsonl
 
 **Kluczowe punkty koncepcyjne:**
 
-- Metody policy gradient modyfikują rozkład prawdopodobieństwa nad akcjami
-- Kierunek aktualizacji jest determinowany przez advantage: reward minus baseline
-- Jest to fundamentalnie inne niż selection—sam generator się zmienia
+- Policy gradient modyfikuje rozkład nad akcjami
+- Kierunek aktualizacji wyznacza advantage: reward minus baseline
+- To inne niż selection—zmienia się generator
 
 #### Demonstracja na żywo
 
@@ -206,7 +206,7 @@ Zwróć uwagę na wyjście krok po kroku:
 
 > "Gdy advantage jest dodatni, prawdopodobieństwo tej akcji wzrasta. Gdy advantage jest ujemny, prawdopodobieństwo maleje. To jest gradient REINFORCE."
 
-#### Demonstracja perturbacji
+#### Sabotage: ujemny learning rate
 
 Wykonaj trening z odwróconym learning rate:
 
@@ -222,13 +222,13 @@ poetry run python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baselin
 
 ### Segment 4: Integracja i synteza (10–15 minut)
 
-#### Framework podsumowujący
+#### Podsumowanie
 
 Przedstaw następującą taksonomię:
 
 | Loop | Główny mechanizm | Co się zmienia | Co pozostaje stałe |
 |------|------------------|----------------|---------------------|
-| A | Pomiar | Zapisane metryki | Policy, środowisko, instrument |
+| A | Pomiar | Zapisane metryki | Policy, środowisko, scorer |
 | B | Selection | Obserwowane wyjścia | Leżący u podstaw rozkład |
 | C | Learning | Rozkład prawdopodobieństwa | (Potencjalnie nic—to jest fundamentalna zmiana) |
 
@@ -236,9 +236,9 @@ Przedstaw następującą taksonomię:
 
 **Stwierdzenie instruktora:**
 
-> "Przed porównaniem jakichkolwiek dwóch przebiegów eksperymentalnych zweryfikuj, że następujące warunki są identyczne: dataset, wersja scorera, konfiguracja próbkowania. Jeśli którykolwiek się różni, porównanie jest metodologicznie nieważne."
+> "Przed porównaniem dwóch przebiegów zweryfikuj, że identyczne są: dataset, prompt, wersja scorera i konfiguracja próbkowania. Jeśli coś się różni, porównanie jest metodologicznie nieważne."
 
-Zademonstruj przez badanie manifestów:
+Pokaż na manifestach:
 
 ```bash
 cat runs/demo_eval_clean/manifest.json | jq '.dataset_fingerprint, .scorer_version'
@@ -247,11 +247,11 @@ cat runs/demo_eval_modified/manifest.json | jq '.dataset_fingerprint, .scorer_ve
 
 ---
 
-## Typowe błędne przekonania studentów
+## Typowe błędy studentów
 
 ### Błędne przekonanie: "Wyższy pass@N oznacza, że model się poprawił"
 
-**Korekta:** Poprawa pass@N może wskazywać na selection (Loop B) zamiast learning (Loop C). Zweryfikuj przez zbadanie, czy parametry policy się zmieniły.
+**Korekta:** Pass@N może rosnąć w Loop B bez learningu. Zweryfikuj, czy parametry policy się zmieniły.
 
 ### Błędne przekonanie: "Scorer to po prostu funkcja oceniająca"
 
@@ -259,7 +259,7 @@ cat runs/demo_eval_modified/manifest.json | jq '.dataset_fingerprint, .scorer_ve
 
 ### Błędne przekonanie: "Możemy porównać dowolne dwa przebiegi z tą samą metryką"
 
-**Korekta:** Porównania są ważne tylko przy warunkach Locked Room. Różne datasety, wersje scorera lub konfiguracje próbkowania unieważniają porównanie.
+**Korekta:** Porównania są ważne tylko przy Zasadzie Locked Room. Różne datasety, wersje scorera lub konfiguracje próbkowania unieważniają porównanie.
 
 ---
 
@@ -270,14 +270,14 @@ cat runs/demo_eval_modified/manifest.json | jq '.dataset_fingerprint, .scorer_ve
 Upewnij się, że studenci odchodzą z rozumieniem:
 
 1. Trzy pętle (A/B/C) reprezentują kategorycznie różne operacje
-2. Warunki Locked Room są warunkami wstępnymi dla ważnego porównania eksperymentalnego
+2. Zasada Locked Room jest warunkiem ważnego porównania eksperymentalnego
 3. Scorer funkcjonuje jako specyfikacja, jakiego zachowania poszukujemy
 
 ### Przejście do pracy projektowej
 
 **Końcowe stwierdzenie instruktora:**
 
-> "Ćwiczenia projektowe będą wymagać od was celowego naruszenia tych zasad, obserwacji wynikających awarii, a następnie zaimplementowania korekt. Cykl Build-Sabotage-Reflect-Repair jest zaprojektowany, aby przekształcić teoretyczne zrozumienie w operacyjną kompetencję."
+> "Ćwiczenia projektowe wymagają celowego naruszenia tych zasad, obserwacji awarii i wdrożenia poprawek. Cykl Build/Sabotage/Reflect/Repair zamienia teorię w kompetencję."
 
 ---
 

@@ -17,6 +17,21 @@ Kroki Sabotage stanowią zasadniczy komponent pedagogiczny tej ścieżki i nie m
 
 ---
 
+## Dlaczego to istnieje
+
+Procesy trenowania i ewaluacji LLM łatwo źle zinterpretować. Metryki mogą się zmieniać, bo zmieniłeś scorer, dataset albo regułę selekcji, a nie sam model. Ta ścieżka uczy dyscypliny pomiaru: zbuduj czystą linię bazową, wprowadź jedną kontrolowaną zmianę, obejrzyj artefakty i zablokuj poprawkę. Celem są wiarygodne dowody, nie tylko wyższe liczby.
+
+## Gdzie to ważne w cyklu życia LLM
+
+- Kuracja danych i ewaluacja: utrzymuj stałe dataset, prompt i scorer, aby porównania były ważne.
+- Specyfikacja nagrody i weryfikacja: scorer i modele nagrody to instrumenty produkcyjne, muszą być deterministyczne i wersjonowane.
+- Selection w czasie inferencji: Best-of-N może poprawiać wyniki bez uczenia, więc atrybucja musi być jawna.
+- Trening (SFT/RLHF/DPO): credit assignment, wariancja i ograniczenia KL decydują, czy uczenie jest stabilne i sensowne.
+- Wdrożenie i monitoring: testy regresji, golden sety i bramki zapobiegają cichej degradacji metryk lub reward hacking.
+- Analiza incydentów: forensyka oparta o artefakty pozwala dowieść, co się zmieniło i dlaczego.
+
+---
+
 ## Uwaga o zakresie (praktyka)
 
 Te zadania **nie** trenują ani nie próbkują realnego LLM. Praca na "policy" jest syntetyczna, aby mechanika była jasna, więc transfer do systemów LLM jest bardziej koncepcyjny niż praktyczny.
@@ -120,6 +135,17 @@ python -m course.bandit_train --help
 
 Jeśli używasz Poetry, uruchamiaj polecenia przez `poetry run ...` albo aktywuj `poetry shell`.
 
+## Zacznij tutaj (nowi studenci)
+
+Jeśli jesteś zupełnie nowy, przeczytaj raz „Reguły fundamentalne", a potem przejdź do sekcji „Zadania zaczynają się tutaj" poniżej. Każdy poziom ma te same cztery ruchy:
+
+1) Build: zbuduj czystą linię bazową, żeby mieć wiarygodny punkt odniesienia.
+2) Sabotage: celowo zmień jedną zmienną, aby zobaczyć tryb awarii.
+3) Reflect: oprzyj wnioski na artefaktach, nie na intuicji.
+4) Repair and lock: napraw mechanizm i zablokuj go testami/notatkami, aby nie wrócił.
+
+Każdy krok niżej ma krótkie wyjaśnienie „po co". Jeśli się zgubisz, wróć do sekcji „Podstawa koncepcyjna" na początku poziomu.
+
 ### Pliki zadań
 
 Pliki zadań zawierają TODO, które należy uzupełnić. Testy są szkieletem i będą się wywracać, dopóki nie ukończysz zadań.
@@ -199,67 +225,9 @@ Dla dowolnego przebiegu w `runs/<name>/` potwierdź:
 - `results.jsonl` istnieje i zawiera rekordy per-przykład.
 - `summary.json` istnieje i metryki zmieniają się zgodnie z celem poziomu.
 
-## Rubryka (jak wygląda poprawne wykonanie)
+## Zadania zaczynają się tutaj (krok po kroku)
 
-Użyj tego jako checklisty do samodzielnej oceny. Jeśli punkt nie przechodzi, wróć do artefaktów i popraw.
-
-### Level 0 — Loop A (higiena pomiarowa)
-- **Build:** `pass_rate` w `runs/l0_build_eval/summary.json` mieści się w [0, 1].
-- **Sabotage:** `runs/l0_sabotage_eval_tampered` ma inny hash datasetu niż build (zob. `manifest.json`).
-- **Gate:** `python -m course.gate` zwraca `REJECT` z naruszeniem Locked Room.
-- **Mental map:** `notes/mental_map_v1.md` zawiera definicje i rozróżnienie A/B/C.
-- **Kata:** `classify()` mapuje błędy formatu na `model_format`, a `"wrong_answer"` na `model_math`.
-
-### Level 0.5 — Loop B (selection)
-- **Build:** `pass_at_n` > `pass_at_1` w `runs/l0_5_build_sel_n4/summary.json`.
-- **Sabotage:** hashe `results.jsonl` różnią się przy losowym tie‑break.
-- **Repair:** hashe są identyczne; selection jest deterministyczna.
-- **Tie‑break:** logprob → długość → leksykografia.
-
-### Level 1 — Loop C (REINFORCE)
-- **Build:** `mean_reward` poprawia się w czasie (zob. `summary.json` lub logi slow).
-- **Sabotage (ujemny lr):** `mean_reward` znacznie niższy niż w build.
-- **Forensics:** `notes/reinforce_forensics.md` poprawnie interpretuje znak advantage.
-
-### Level 2 — Credit assignment + granica token‑tekst
-- **Token inspect:** warianty formatu tokenizują się inaczej.
-- **Two‑step build:** `mean_reward` blisko 1.0 i policy kroku 1 staje się nierównomierne.
-- **Sabotage:** bez aktualizacji kroku 1 policy kroku 1 ~równomierne i `mean_reward` spada.
-- **Repair:** zachowanie wraca do build.
-
-### Level 3 — KL tradeoff
-- **KL demo:** istnieje `runs/l3_build_kl_demo/kl_tradeoff.csv`.
-- **KL choice:** wybór różni się dla `beta=0.1` vs `beta=1.0`.
-- **Notes:** `notes/kl_tradeoff.md` wyjaśnia, czemu `beta=0` jest ryzykowne.
-
-### Level 4 — Scorer jako kod produkcyjny
-- **Golden testy:** oba zbiory przechodzą po naprawie.
-- **Sabotage:** po osłabieniu reguły przynajmniej jeden exploit przechodzi.
-- **Lock:** testy regresji zawierają przypadki poprawne i exploit.
-
-### Level 5 — Reward exploitation
-- **Naive verifier:** exploitowe stringi dostają nagrodę w wersji naiwnej.
-- **Patched verifier:** te same stringi są odrzucane po poprawce.
-- **Raport:** `notes/red_team_report.md` opisuje exploity i strategię naprawy.
-
-### Level 6 — Promotion committee
-- **Trap 1:** REJECT z dowodem naruszenia Locked Room.
-- **Trap 2:** poprawa selection bez learningu; odrzucić do promocji.
-- **Trap 3:** learning poprawia reward; promocja warunkowa (holdout).
-
----
-
-## Szablon dokumentacji uruchomienia
-
-Następujący szablon powinien być wypełniony dla każdego przebiegu eksperymentalnego w `runs/<name>/README.md`:
-
-* **Loop:** A / B / C
-* **Zmodyfikowana zmienna (wybierz dokładnie jedną):** instrument pomiarowy / compute selection / policy / środowisko
-* **Dowód Locked Room:** (fingerprinty datasetu + wersja scorera; bezpośredni cytat z manifestu)
-* **Oczekiwany wynik:**
-* **Zaobserwowany wynik (ilościowy):**
-* **Dwa konkretne przykłady:** (id przykładu + outcome code + zaobserwowane zachowanie)
-* **Plan naprawy:** (jedno zdanie)
+Od tego miejsca idź poziom po poziomie. Każdy poziom jest napisany krok po kroku i zawiera krótkie wyjaśnienie, po co wykonujesz dane działanie. Nie pomijaj sabotażu ani naprawy; kontrast jest lekcją.
 
 ---
 
@@ -273,9 +241,19 @@ Następujący szablon powinien być wypełniony dla każdego przebiegu eksperyme
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Wykonanie czystej ewaluacji Loop A
+- Wejścia: `data/datasets/math_dev.jsonl`, `data/rollouts/frozen_rollouts_dev.jsonl`
+- Wyjścia: `runs/l0_build_eval`, `runs/l0_sabotage_eval_tampered` z manifest/results/summary
+- Edycje: `notes/mental_map_v1.md`, `course/assignments/kata_01.py`, `tests/test_kata_01.py`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Wykonanie czystej ewaluacji Loop A
+
+Budujesz czystą linię bazową, aby późniejsze porównania miały wiarygodny punkt odniesienia.
 
 ```bash
 python -m course.eval \
@@ -286,7 +264,9 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
-### Faza Sabotage: Wprowadzenie manipulacji datasetu (naruszenie Locked Room)
+### Krok 2 - Sabotage: Wprowadzenie manipulacji datasetu (naruszenie Locked Room)
+
+Celowo zmieniasz jedną etykietę, żeby pokazać, że metryki mogą się przesunąć bez zmiany policy.
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
@@ -298,7 +278,9 @@ python -m course.eval \
   --outdir runs/l0_sabotage_eval_tampered
 ```
 
-### Faza Reflect: Wywołanie bramki do oceny porównywalności
+### Krok 3 - Reflect: Wywołanie bramki do oceny porównywalności
+
+Używasz bramki, żeby wykazać, że przebiegi nie są porównywalne; oczekiwany REJECT to zabezpieczenie.
 
 ```bash
 python -m course.gate \
@@ -312,6 +294,8 @@ Oczekiwane wyjście to **REJECT** z informacjami diagnostycznymi wskazującymi n
 ---
 
 ## Zadania Capstone
+
+Cel: udokumentować model mentalny i zablokować koncepcje krótką katą.
 
 **Dozwolone modyfikacje:** Pliki pod `notes/`, `course/assignments/`, `tests/` i nowe pliki pod `data/`.
 Modyfikacje kodu scorera nie są dozwolone na tym poziomie.
@@ -370,9 +354,19 @@ pytest -q
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Wykonanie demo selection na dostarczonych danych
+- Wejścia: `data/datasets/math_dev.jsonl`, `data/rollouts/selection_pack_dev.jsonl`
+- Wyjścia: `runs/l0_5_build_sel_n4`, `runs/l0_5_sabotage_sel_random_*`, `runs/l0_5_fixed_sel_n4`
+- Edycje: `course/assignments/selection_policy.py`, `tests/test_selection_policy.py`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Wykonanie demo selection na dostarczonych danych
+
+Ustanawiasz linię bazową selection, żeby mieć punkt odniesienia dla późniejszych zmian.
 
 ```bash
 python -m course.selection_demo \
@@ -384,7 +378,9 @@ python -m course.selection_demo \
 python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
-### Faza Sabotage: Wprowadzenie niedeterminizmu do tie-breaking
+### Krok 2 - Sabotage: Wprowadzenie niedeterminizmu do tie-breaking
+
+Wstrzykujesz losowość, aby pokazać, że niedeterministyczny tie-break destabilizuje artefakty.
 
 Edytuj `course/assignments/selection_policy.py`.
 
@@ -409,7 +405,9 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-### Faza Reflect: Wykazanie wariancji przez analizę artefaktów
+### Krok 3 - Reflect: Wykazanie wariancji przez analizę artefaktów
+
+Potwierdzasz niedeterministyczność, pokazując różne hashe `results.jsonl`.
 
 Oblicz hash każdego `results.jsonl`. Jeśli selection jest niedeterministyczne, hashe będą się różnić:
 
@@ -422,6 +420,8 @@ done
 ---
 
 ## Zadania Capstone
+
+Cel: naprawić policy selection i zablokować deterministyczność testami.
 
 **Dozwolone modyfikacje:** Tylko `course/assignments/selection_policy.py` i powiązane testy.
 
@@ -474,15 +474,27 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Stabilne uczenie z baseline
+- Wejścia: brak (syntetyczny bandit)
+- Wyjścia: `runs/l1_build_bandit`, `runs/l1_sabotage_lr2`, `runs/l1_sabotage_lrneg`, `runs/l1_build_slow`, `runs/l1_sabotage_slow_lrneg`
+- Edycje: `notes/reinforce_forensics.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Stabilne uczenie z baseline
+
+Ustanawiasz zdrową linię bazową uczenia, aby rozpoznać późniejsze awarie.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
-### Faza Sabotage: Nadmierna optymalizacja i odwrócone uczenie
+### Krok 2 - Sabotage: Nadmierna optymalizacja i odwrócone uczenie
+
+Celowo destabilizujesz uczenie, aby zobaczyć dwa różne tryby awarii.
 
 Wykonaj dwa eksperymenty sabotażowe:
 
@@ -498,7 +510,9 @@ python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir 
 python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
-### Faza Reflect: Obserwacja mechanizmu krok po kroku
+### Krok 3 - Reflect: Obserwacja mechanizmu krok po kroku
+
+Tryb slow pozwala zobaczyć, jak znaki advantage zmieniają prawdopodobieństwa.
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
@@ -508,6 +522,8 @@ python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --
 ---
 
 ## Zadania Capstone
+
+Cel: napisać krótką notatkę forensics łączącą znak advantage z kierunkiem aktualizacji.
 
 **Dozwolone modyfikacje:** Pliki pod `notes/` i `course/assignments/`. Modyfikacja `course/bandit_train.py` nie jest dozwolona.
 
@@ -541,9 +557,19 @@ Zakończ jednym akapitem wyjaśniającym różnice behawioralne zaobserwowane w 
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Obserwacja granicy tokenów
+- Wejścia: brak (token_inspect używa stałych stringów)
+- Wyjścia: `runs/l2_build_two_step`, `runs/l2_sabotage_no_credit_step1`, `runs/l2_fixed_two_step`
+- Edycje: `course/assignments/two_step_mdp_demo.py`, `notes/credit_assignment.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Obserwacja granicy tokenów
+
+Obserwujesz, jak drobne zmiany formatu tworzą inne tokenizacje, co tłumaczy rygor formatu.
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -556,9 +582,13 @@ python -m course.token_inspect "Final: 0323"
 
 ## Zadania Capstone
 
+Cel: zbudować dwukrokowe demo MDP, celowo je zepsuć, a potem naprawić i wyjaśnić dlaczego.
+
 **Dozwolone modyfikacje:** Utwórz `course/assignments/two_step_mdp_demo.py` i powiązane notatki. Modyfikacja scorera nie jest dozwolona.
 
-### Build: Poprawna implementacja dwukrokowego REINFORCE
+### Krok 2 - Build: Poprawna implementacja dwukrokowego REINFORCE
+
+Implementujesz środowisko dwukrokowe, aby credit assignment w czasie było widoczne.
 
 Utwórz `course/assignments/two_step_mdp_demo.py`:
 
@@ -571,7 +601,9 @@ Utwórz `course/assignments/two_step_mdp_demo.py`:
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_build_two_step
 ```
 
-### Sabotage: Usunięcie credit assignment dla kroku 1
+### Krok 3 - Sabotage: Usunięcie credit assignment dla kroku 1
+
+Usuwasz aktualizacje kroku 1, aby zobaczyć, co się psuje bez credit assignment.
 
 Zmodyfikuj skrypt tak, aby **tylko krok 2 otrzymywał aktualizacje** (krok 1 pozostaje jednostajnie losowy):
 
@@ -579,7 +611,9 @@ Zmodyfikuj skrypt tak, aby **tylko krok 2 otrzymywał aktualizacje** (krok 1 poz
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_sabotage_no_credit_step1
 ```
 
-### Repair: Przywrócenie aktualizacji kroku 1
+### Krok 4 - Repair: Przywrócenie aktualizacji kroku 1
+
+Przywracasz aktualizacje kroku 1, aby odzyskać uczenie i porównać artefakty.
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
@@ -587,7 +621,9 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 Utwórz `notes/credit_assignment.md`:
 
-* Wyjaśnij, co zawiodło podczas sabotażu i przyczynę leżącą u podstaw
+Wyjaśnij prostym językiem, co zawiodło podczas sabotażu i dlaczego naprawa działa. Dołącz:
+
+* Krótki opis awarii i jej przyczyny
 * Dołącz diagram: tokeny → detokenizacja → tekst → parsowanie → nagroda
 
 ---
@@ -610,9 +646,19 @@ Utwórz `notes/credit_assignment.md`:
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Wykonanie demonstracji kompromisu KL
+- Wejścia: brak (demo używa syntetycznych policy)
+- Wyjścia: `runs/l3_build_kl_demo`, `runs/l3_build_kl_choice.txt`, `runs/l3_sabotage_no_kl.txt`
+- Edycje: `course/assignments/kl_regularized_choice.py`, `notes/kl_tradeoff.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Wykonanie demonstracji kompromisu KL
+
+Uruchamiasz demo, żeby zobaczyć kompromis reward vs KL zanim napiszesz kod.
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
@@ -622,9 +668,13 @@ python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 
 ## Zadania Capstone
 
+Cel: zaimplementować małą regułę KL-regularized, zepsuć ją i wyjaśnić różnicę.
+
 **Dozwolone modyfikacje:** Utwórz skrypty assignment i notatki. Modyfikacja głównego kodu demonstracji nie jest dozwolona.
 
-### Build: Selection z regularyzacją KL na danych syntetycznych
+### Krok 2 - Build: Selection z regularyzacją KL na danych syntetycznych
+
+Implementujesz regułę wyboru, aby kara KL była konkretna.
 
 Utwórz `course/assignments/kl_regularized_choice.py`:
 
@@ -636,7 +686,9 @@ Utwórz `course/assignments/kl_regularized_choice.py`:
 python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 ```
 
-### Sabotage: Usunięcie ograniczenia regularyzacyjnego (beta = 0)
+### Krok 3 - Sabotage: Usunięcie ograniczenia regularyzacyjnego (beta = 0)
+
+Usuwasz ograniczenie, aby zobaczyć, jak zmienia się wybór bez KL.
 
 Zmodyfikuj skrypt, aby ustawić beta = 0:
 
@@ -644,7 +696,9 @@ Zmodyfikuj skrypt, aby ustawić beta = 0:
 python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 ```
 
-### Reflect
+### Krok 4 - Reflect
+
+Dokumentujesz, dlaczego nieograniczony wybór jest kuszący, ale ryzykowny.
 
 Utwórz `notes/kl_tradeoff.md`:
 
@@ -671,9 +725,19 @@ Utwórz `notes/kl_tradeoff.md`:
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Walidacja scorera względem golden test cases
+- Wejścia: `data/datasets/math_dev.jsonl`, `data/golden/golden_correct.jsonl`, `data/golden/golden_exploits.jsonl`
+- Wyjścia: `data/golden/golden_exploits_extra.jsonl`, `tests/test_reward_regressions.py`
+- Edycje: `course/core/scoring.py`, `notes/reward_spec_blackbox.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Walidacja scorera względem golden test cases
+
+Ustanawiasz bieżące zachowanie scorera, żeby zmiany były mierzalne.
 
 ```bash
 python -m course.validate_scorer \
@@ -689,17 +753,23 @@ python -m course.validate_scorer \
 
 ## Zadania Capstone
 
+Cel: sondować scorer, wprowadzić celowe osłabienie, a potem przywrócić i zablokować poprawkę.
+
 **Dozwolone modyfikacje:** `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
 Modyfikacje kodu selection i learning nie są dozwolone na tym poziomie.
 
-### Build: Sondowanie specyfikacji Black-Box
+### Krok 2 - Build: Sondowanie specyfikacji Black-Box
+
+Wnioskujesz o specyfikacji z obserwacji, czyli tak jak w prawdziwym black-box.
 
 Utwórz `notes/reward_spec_blackbox.md`:
 
 * Udokumentuj reguły formatu, które twoim zdaniem istnieją na podstawie zaobserwowanego zachowania
 * Dołącz 8 ciągów sond z przewidywanymi outcome codes
 
-### Sabotage: Poluzowanie jednej reguły specyfikacji
+### Krok 3 - Sabotage: Poluzowanie jednej reguły specyfikacji
+
+Osłabiasz jedną regułę, aby zobaczyć, jak exploity przechodzą.
 
 Wybierz jedną ścisłą regułę w `course/core/scoring.py` i celowo ją osłab (przykłady):
 
@@ -715,7 +785,9 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-### Repair and Lock: Przywrócenie ścisłości i rozszerzenie pokrycia testami
+### Krok 4 - Repair and Lock: Przywrócenie ścisłości i rozszerzenie pokrycia testami
+
+Przywracasz specyfikację i blokujesz ją testami oraz goldenami.
 
 1. Przywróć poprawne zachowanie specyfikacji.
 2. Utwórz `tests/test_reward_regressions.py` z **co najmniej 6** przypadkami testowymi:
@@ -752,9 +824,19 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Faza Build: Ustanowienie kontekstu bazowego (opcjonalne)
+- Wejścia: opcjonalny baseline używa `data/datasets/math_dev.jsonl`, `data/rollouts/frozen_rollouts_dev.jsonl`
+- Wyjścia: `runs/l5_build_eval_context` (opcjonalne)
+- Edycje: `course/assignments/hackable_scorer_demo.py`, `notes/red_team_report.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Build: Ustanowienie kontekstu bazowego (opcjonalne)
+
+Odświeżasz kontekst działania ewaluatora; to opcjonalny materiał bazowy.
 
 ```bash
 python -m course.eval \
@@ -769,20 +851,28 @@ python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top
 
 ## Zadania Capstone
 
+Cel: zbudować naiwny weryfikator, wyeksploatować go i naprawić klasę exploitów.
+
 **Dozwolone modyfikacje:** Nowe pliki assignment, notatki i testy. Modyfikacje produkcyjnego scorera powinny być traktowane jako zmiany instrumentu wymagające inkrementacji wersji.
 
-### Build: Implementacja celowo naiwnego weryfikatora
+### Krok 2 - Build: Implementacja celowo naiwnego weryfikatora
+
+Tworzysz celowo słaby weryfikator, żeby móc zbadać jego porażki.
 
 Utwórz `course/assignments/hackable_scorer_demo.py`:
 
 * Przypisz reward = 1, jeśli oczekiwana liczba całkowita pojawia się gdziekolwiek w uzupełnieniu (naiwne podejście substring/regex)
 * Zademonstruj, że produkuje poprawne wyniki na uczciwych uzupełnieniach
 
-### Sabotage: Wygenerowanie 5 exploitów
+### Krok 3 - Sabotage: Wygenerowanie 5 exploitów
+
+Tworzysz uzupełnienia, które przechodzą naiwny test bez rozwiązania zadania.
 
 Utwórz 5 uzupełnień, które osiągają reward = 1 bez stanowienia poprawnych rozwiązań (np. wyliczanie liczb).
 
-### Repair: Załatanie klasy exploitów
+### Krok 4 - Repair: Załatanie klasy exploitów
+
+Łatasz klasę exploitów (nie tylko konkretne ciągi) i dokumentujesz poprawkę.
 
 Zmodyfikuj demonstracyjny weryfikator, aby zamknąć klasę exploitów (nie tylko konkretne ciągi exploit).
 
@@ -813,9 +903,19 @@ Utwórz `notes/red_team_report.md`:
 
 ---
 
-## Kroki proceduralne
+## Checklista pierwszego uruchomienia
 
-### Pułapka 1 (Sabotage): Nieważna promocja przez zmianę instrumentu
+- Wejścia: `runs/l0_build_eval`, `runs/l0_sabotage_eval_tampered`, `data/rollouts/selection_pack_dev.jsonl`
+- Wyjścia: `runs/l6_trap_sel_n1`, `runs/l6_trap_sel_n4`, `runs/l6_trap_learning`
+- Edycje: `notes/promotion_memo.md`
+
+---
+
+## Krok po kroku
+
+### Krok 1 - Pułapka 1 (Sabotage): Nieważna promocja przez zmianę instrumentu
+
+Próbujesz „promocji" na podstawie naruszenia Locked Room, aby pokazać, po co jest gate.
 
 Użyj wcześniej zmanipulowanego przebiegu z datasetem (lub utwórz nowy), następnie wywołaj bramkę:
 
@@ -826,7 +926,9 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-### Pułapka 2: Poprawa selection bez learning
+### Krok 2 - Pułapka 2: Poprawa selection bez learning
+
+Pokazujesz, że metryki mogą rosnąć bez uczenia, więc promocja nie jest uzasadniona.
 
 ```bash
 python -m course.selection_demo \
@@ -842,7 +944,9 @@ python -m course.selection_demo \
   --outdir runs/l6_trap_sel_n4
 ```
 
-### Pułapka 3: Learning modyfikuje zachowanie
+### Krok 3 - Pułapka 3: Learning modyfikuje zachowanie
+
+Pokazujesz realny learning, a następnie argumentujesz promocję na podstawie dowodów i ryzyka holdout.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
@@ -851,6 +955,8 @@ python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir 
 ---
 
 ## Zadania Capstone
+
+Cel: napisać krótką notatkę promocyjną opartą o artefakty, nie intuicję.
 
 Utwórz `notes/promotion_memo.md` (maksymalnie 1 strona):
 
@@ -875,3 +981,67 @@ Utwórz `notes/promotion_memo.md` (maksymalnie 1 strona):
 ## Podsumowanie ukończenia ścieżki
 
 Pomyślne ukończenie tej ścieżki ustanawia podstawową kompetencję, do której ten kurs dąży: zdolność do wykonywania i interpretowania eksperymentów RL-for-LLMs bez mylenia **pomiaru**, **selection** i **learning**, oraz bez akceptowania metodologicznie nieważnych porównań.
+
+---
+
+## Aneks
+
+### Rubryka (jak wygląda poprawne wykonanie)
+
+Użyj tego jako checklisty do samodzielnej oceny. Jeśli punkt nie przechodzi, wróć do artefaktów i popraw.
+
+#### Level 0 — Loop A (higiena pomiarowa)
+- **Build:** `pass_rate` w `runs/l0_build_eval/summary.json` mieści się w [0, 1].
+- **Sabotage:** `runs/l0_sabotage_eval_tampered` ma inny hash datasetu niż build (zob. `manifest.json`).
+- **Gate:** `python -m course.gate` zwraca `REJECT` z naruszeniem Locked Room.
+- **Mental map:** `notes/mental_map_v1.md` zawiera definicje i rozróżnienie A/B/C.
+- **Kata:** `classify()` mapuje błędy formatu na `model_format`, a `"wrong_answer"` na `model_math`.
+
+#### Level 0.5 — Loop B (selection)
+- **Build:** `pass_at_n` > `pass_at_1` w `runs/l0_5_build_sel_n4/summary.json`.
+- **Sabotage:** hashe `results.jsonl` różnią się przy losowym tie‑break.
+- **Repair:** hashe są identyczne; selection jest deterministyczna.
+- **Tie‑break:** logprob → długość → leksykografia.
+
+#### Level 1 — Loop C (REINFORCE)
+- **Build:** `mean_reward` poprawia się w czasie (zob. `summary.json` lub logi slow).
+- **Sabotage (ujemny lr):** `mean_reward` znacznie niższy niż w build.
+- **Forensics:** `notes/reinforce_forensics.md` poprawnie interpretuje znak advantage.
+
+#### Level 2 — Credit assignment + granica token‑tekst
+- **Token inspect:** warianty formatu tokenizują się inaczej.
+- **Two‑step build:** `mean_reward` blisko 1.0 i policy kroku 1 staje się nierównomierne.
+- **Sabotage:** bez aktualizacji kroku 1 policy kroku 1 ~równomierne i `mean_reward` spada.
+- **Repair:** zachowanie wraca do build.
+
+#### Level 3 — KL tradeoff
+- **KL demo:** istnieje `runs/l3_build_kl_demo/kl_tradeoff.csv`.
+- **KL choice:** wybór różni się dla `beta=0.1` vs `beta=1.0`.
+- **Notes:** `notes/kl_tradeoff.md` wyjaśnia, czemu `beta=0` jest ryzykowne.
+
+#### Level 4 — Scorer jako kod produkcyjny
+- **Golden testy:** oba zbiory przechodzą po naprawie.
+- **Sabotage:** po osłabieniu reguły przynajmniej jeden exploit przechodzi.
+- **Lock:** testy regresji zawierają przypadki poprawne i exploit.
+
+#### Level 5 — Reward exploitation
+- **Naive verifier:** exploitowe stringi dostają nagrodę w wersji naiwnej.
+- **Patched verifier:** te same stringi są odrzucane po poprawce.
+- **Raport:** `notes/red_team_report.md` opisuje exploity i strategię naprawy.
+
+#### Level 6 — Promotion committee
+- **Trap 1:** REJECT z dowodem naruszenia Locked Room.
+- **Trap 2:** poprawa selection bez learningu; odrzucić do promocji.
+- **Trap 3:** learning poprawia reward; promocja warunkowa (holdout).
+
+### Szablon dokumentacji uruchomienia
+
+Następujący szablon powinien być wypełniony dla każdego przebiegu eksperymentalnego w `runs/<name>/README.md`:
+
+* **Loop:** A / B / C
+* **Zmodyfikowana zmienna (wybierz dokładnie jedną):** instrument pomiarowy / compute selection / policy / środowisko
+* **Dowód Locked Room:** (fingerprinty datasetu + wersja scorera; bezpośredni cytat z manifestu)
+* **Oczekiwany wynik:**
+* **Zaobserwowany wynik (ilościowy):**
+* **Dwa konkretne przykłady:** (id przykładu + outcome code + zaobserwowane zachowanie)
+* **Plan naprawy:** (jedno zdanie)

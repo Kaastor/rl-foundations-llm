@@ -17,6 +17,21 @@ The Sabotage steps constitute the essential pedagogical component of this track 
 
 ---
 
+## Why This Exists
+
+LLM training and evaluation pipelines are easy to misread. Metrics can move because you changed the scorer, dataset, or selection rule rather than the model itself. This track trains measurement discipline: build a clean baseline, make one controlled change, inspect artifacts, and lock the fix. The goal is reliable evidence, not just higher numbers.
+
+## Where It Matters in the LLM Lifecycle
+
+- Data curation and eval: keep dataset, prompt, and scorer fixed so comparisons are valid.
+- Reward specification and verification: scorers and reward models are production instruments that must be deterministic and versioned.
+- Inference-time selection: Best-of-N can boost results without learning, so attribution must be explicit.
+- Training (SFT/RLHF/DPO): credit assignment, variance, and KL constraints determine whether learning is stable and meaningful.
+- Deployment and monitoring: regression tests, golden sets, and gates prevent silent metric drift or reward hacking.
+- Incident analysis: artifact-based forensics let you prove what changed and why.
+
+---
+
 ## Scope note (practicality)
 
 These assignments do **not** fine-tune or sample a real LLM. The "policy" work is synthetic to make the mechanics clear, so transfer to LLM systems is conceptual rather than hands-on.
