@@ -2,6 +2,12 @@
 
 ---
 
+## Why This Course?
+
+This course teaches you the thinking that prevents expensive mistakes. Most RL tutorials focus on algorithms, but most real-world failures come from broken measurement—you changed the eval instead of improving the model, your reward got hacked, your results aren't reproducible. Here you'll learn to treat reward as a specification (test it like code), separate real improvement from self-deception (Locked Room Rule), and understand *why* RL works (policy gradients, credit assignment, KL constraints) through small experiments you deliberately break and fix. You won't leave with a PPO implementation, but you'll leave able to read production RLHF systems critically and ask the questions that matter: "Is this metric trustworthy? Did the policy actually improve, or did we just pick better samples? What happens when optimization pressure finds the loopholes?" That's the skill gap between running a framework and understanding what it's doing.
+
+---
+
 ## Fundamental Concepts
 
 A Large Language Model (LLM) functions as a probabilistic system: when provided with a prompt $x$, it does not generate a singular, deterministic answer. Rather, it defines a **conditional probability distribution $P(y | x)$** over possible completions $y$, where each token in the completion is sampled sequentially according to the model's learned distribution.

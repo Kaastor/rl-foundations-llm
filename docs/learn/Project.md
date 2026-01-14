@@ -199,6 +199,8 @@ For any run in `runs/<name>/`, confirm:
 - `results.jsonl` exists and includes per-example records.
 - `summary.json` exists and matches the expected metric direction for that level.
 
+## Assignment Descriptions
+
 ## Rubric (what “correct” looks like)
 
 Use this as a checklist to evaluate your work without external help. If a row fails, investigate artifacts and fix before moving on.

@@ -2,6 +2,12 @@
 
 ---
 
+## Dlaczego ten kurs?
+
+Ten kurs uczy myślenia, które zapobiega kosztownym błędom. Większość tutoriali RL skupia się na algorytmach, ale większość rzeczywistych porażek wynika z błędnej ewaluacji — zmieniłeś eval zamiast poprawić model, twoja nagroda została zhakowana, twoje wyniki nie są powtarzalne. Tutaj nauczysz się traktować nagrodę jako specyfikację (testować ją jak kod), odróżniać rzeczywistą poprawę od samooszustwa (Locked Room Rule) i zrozumiesz *dlaczego* RL działa (gradienty policy, przypisywanie kredytu, ograniczenia KL) przez małe eksperymenty, które celowo psujesz i naprawiasz. Nie wyjdziesz z implementacją PPO, ale wyjdziesz zdolny do krytycznej lektury produkcyjnych systemów RLHF i zadawania pytań, które mają znaczenie: „Czy ta metryka jest wiarygodna? Czy policy rzeczywiście się poprawiła, czy tylko wybraliśmy lepsze próbki? Co się stanie, gdy presja optymalizacyjna znajdzie luki?" To jest ta różnica kompetencyjna między uruchamianiem frameworka a rozumieniem, co on robi.
+
+---
+
 ## Podstawowe pojęcia
 
 Duży Model Językowy (Large Language Model, LLM) funkcjonuje jako system probabilistyczny: po otrzymaniu promptu $x$ nie generuje pojedynczej, deterministycznej odpowiedzi. Definiuje natomiast **warunkowy rozkład prawdopodobieństwa $P(y | x)$** nad możliwymi uzupełnieniami $y$, gdzie każdy token w uzupełnieniu jest próbkowany sekwencyjnie zgodnie z wyuczonym rozkładem modelu.
