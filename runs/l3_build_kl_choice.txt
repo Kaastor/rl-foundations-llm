@@ -1,0 +1,2 @@
+beta=0.1 -> c3 (reward=1.2, kl=1.5, score=1.050)
+beta=1.0 -> c2 (reward=0.9, kl=0.1, score=0.800)

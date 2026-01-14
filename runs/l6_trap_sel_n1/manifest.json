@@ -1,0 +1,59 @@
+{
+  "command": {
+    "args": {
+      "dataset": "data/datasets/math_dev.jsonl",
+      "max_examples": null,
+      "n": 1,
+      "outdir": "runs/l6_trap_sel_n1",
+      "samples": "data/rollouts/selection_pack_dev.jsonl"
+    },
+    "argv": [
+      "/home/przemek/Nauka/rl-foundations-llm/course/selection_demo.py",
+      "--dataset",
+      "data/datasets/math_dev.jsonl",
+      "--samples",
+      "data/rollouts/selection_pack_dev.jsonl",
+      "--n",
+      "1",
+      "--outdir",
+      "runs/l6_trap_sel_n1"
+    ],
+    "script": "selection_demo"
+  },
+  "created_utc": "2026-01-14T18:26:53+00:00",
+  "environment": {
+    "cwd": "/home/przemek/Nauka/rl-foundations-llm",
+    "machine": "x86_64",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "processor": "x86_64",
+    "python_executable": "/usr/bin/python3.11",
+    "python_version": "3.11.13 (main, Jun  4 2025, 08:57:30) [GCC 9.4.0]"
+  },
+  "extra": {
+    "n": 1,
+    "n_missing_samples": 0
+  },
+  "git": {
+    "commit": "b6ebf71d99e7098faf0836e6342a6487d922353e",
+    "dirty": true
+  },
+  "inputs": [
+    {
+      "modified_utc": "2025-12-19T18:38:20+00:00",
+      "path": "data/datasets/math_dev.jsonl",
+      "sha256": "af5c8a6f7a775984a11dc5ea5f1f3c9530cd775a92439021bc1490fd6f23827b",
+      "size_bytes": 2185
+    },
+    {
+      "modified_utc": "2025-12-19T18:38:20+00:00",
+      "path": "data/rollouts/selection_pack_dev.jsonl",
+      "sha256": "b2f024d07adb37b89cead23b8426145bde5393969888ca6bbd484f6838580e85",
+      "size_bytes": 1875
+    }
+  ],
+  "run_id": "l6_trap_sel_n1",
+  "scorer": {
+    "name": "math_final_line_verifier",
+    "version": "1.0.0"
+  }
+}

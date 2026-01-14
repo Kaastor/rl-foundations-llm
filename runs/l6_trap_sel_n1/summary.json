@@ -1,0 +1,22 @@
+{
+  "metrics": {
+    "delta": 0.0,
+    "n_pass_at_1": 5,
+    "n_pass_at_n": 5,
+    "pass_at_1": 0.25,
+    "pass_at_n": 0.25,
+    "rescued": 0
+  },
+  "run": {
+    "created_utc": "2026-01-14T18:26:53+00:00",
+    "dataset_path": "data/datasets/math_dev.jsonl",
+    "n": 1,
+    "n_examples": 20,
+    "n_missing_samples": 0,
+    "samples_path": "data/rollouts/selection_pack_dev.jsonl",
+    "scorer": {
+      "name": "math_final_line_verifier",
+      "version": "1.0.0"
+    }
+  }
+}

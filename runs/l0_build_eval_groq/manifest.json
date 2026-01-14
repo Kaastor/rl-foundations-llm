@@ -1,0 +1,59 @@
+{
+  "command": {
+    "args": {
+      "completions": "runs/rollouts_groq_dev/completions.jsonl",
+      "dataset": "data/datasets/math_dev.jsonl",
+      "max_examples": null,
+      "outdir": "runs/l0_build_eval_groq"
+    },
+    "argv": [
+      "/home/przemek/Nauka/rl-foundations-llm/course/eval.py",
+      "--dataset",
+      "data/datasets/math_dev.jsonl",
+      "--completions",
+      "runs/rollouts_groq_dev/completions.jsonl",
+      "--outdir",
+      "runs/l0_build_eval_groq"
+    ],
+    "script": "eval"
+  },
+  "created_utc": "2026-01-14T19:14:25+00:00",
+  "environment": {
+    "cwd": "/home/przemek/Nauka/rl-foundations-llm",
+    "machine": "x86_64",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "processor": "x86_64",
+    "python_executable": "/usr/bin/python3.11",
+    "python_version": "3.11.13 (main, Jun  4 2025, 08:57:30) [GCC 9.4.0]"
+  },
+  "extra": {
+    "completion_source": {
+      "n": 20,
+      "path": "runs/rollouts_groq_dev/completions.jsonl",
+      "type": "jsonl"
+    }
+  },
+  "git": {
+    "commit": "84733e5eee0c7356f6179ff5bb5d007275ccaaa6",
+    "dirty": true
+  },
+  "inputs": [
+    {
+      "modified_utc": "2025-12-19T18:38:20+00:00",
+      "path": "data/datasets/math_dev.jsonl",
+      "sha256": "af5c8a6f7a775984a11dc5ea5f1f3c9530cd775a92439021bc1490fd6f23827b",
+      "size_bytes": 2185
+    },
+    {
+      "modified_utc": "2026-01-14T19:14:21+00:00",
+      "path": "runs/rollouts_groq_dev/completions.jsonl",
+      "sha256": "8243a70719bdb74d703fab77ac2fd2c0019d823e26a3afa884867f2d7dcb5b93",
+      "size_bytes": 3415
+    }
+  ],
+  "run_id": "l0_build_eval_groq",
+  "scorer": {
+    "name": "math_final_line_verifier",
+    "version": "1.0.0"
+  }
+}

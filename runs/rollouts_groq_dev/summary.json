@@ -1,0 +1,20 @@
+{
+  "output": {
+    "path": "runs/rollouts_groq_dev/completions.jsonl"
+  },
+  "run": {
+    "created_utc": "2026-01-14T19:14:17+00:00",
+    "dataset_path": "data/datasets/math_dev.jsonl",
+    "format": "completions",
+    "model": "llama-3.1-8b-instant",
+    "n_examples": 20,
+    "n_samples": 1,
+    "provider": "groq"
+  },
+  "sampling": {
+    "max_tokens": 128,
+    "system_prompt": false,
+    "temperature": 0.0,
+    "top_p": 1.0
+  }
+}

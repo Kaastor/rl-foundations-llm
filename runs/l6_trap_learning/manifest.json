@@ -1,0 +1,30 @@
+{
+  "command": {
+    "args": {
+      "baseline": true,
+      "lr": 0.5,
+      "seed": 1,
+      "slow": false,
+      "steps": 200
+    },
+    "argv": [],
+    "script": "bandit_train"
+  },
+  "created_utc": "2026-01-14T18:27:01+00:00",
+  "environment": {
+    "cwd": "/home/przemek/Nauka/rl-foundations-llm",
+    "machine": "x86_64",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "processor": "x86_64",
+    "python_executable": "/usr/bin/python3.11",
+    "python_version": "3.11.13 (main, Jun  4 2025, 08:57:30) [GCC 9.4.0]"
+  },
+  "extra": {},
+  "git": {
+    "commit": "b6ebf71d99e7098faf0836e6342a6487d922353e",
+    "dirty": true
+  },
+  "inputs": [],
+  "run_id": "l6_trap_learning",
+  "scorer": {}
+}

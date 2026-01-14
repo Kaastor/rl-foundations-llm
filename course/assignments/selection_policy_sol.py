@@ -39,7 +39,7 @@ class SelectionResult:
     scored: dict[str, Any]
 
 
-def tie_break_key(sample: RolloutSample) -> tuple[int, str]:
+def tie_break_key(sample: RolloutSample) -> tuple[float, int, str]:
     """Deterministic tie-break key.
 
     The default uses the completion text.
@@ -48,7 +48,9 @@ def tie_break_key(sample: RolloutSample) -> tuple[int, str]:
     prefer higher logprob, etc — as long as it stays deterministic.
     """
 
-    return (0, sample.completion)
+    lp = sample.sum_logprob
+    lp_key = 0.0 if lp is None else -float(lp)
+    return (lp_key, len(sample.completion), sample.completion)
 
 
 def pick_best(

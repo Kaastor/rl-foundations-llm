@@ -1,0 +1,38 @@
+{
+  "metrics": {
+    "mean_reward": 0.15,
+    "n_fail": 17,
+    "n_pass": 3,
+    "pass_rate": 0.15
+  },
+  "outcomes": {
+    "counts": {
+      "extra_whitespace": 4,
+      "missing_prefix": 4,
+      "not_single_line": 4,
+      "ok": 3,
+      "wrong_answer": 5
+    },
+    "failures": {
+      "extra_whitespace": 4,
+      "missing_prefix": 4,
+      "not_single_line": 4,
+      "wrong_answer": 5
+    }
+  },
+  "run": {
+    "completion_source": {
+      "n": 20,
+      "path": "data/rollouts/frozen_rollouts_dev.jsonl",
+      "type": "jsonl"
+    },
+    "created_utc": "2026-01-14T18:21:01+00:00",
+    "dataset_path": "data/datasets/math_dev_TAMPERED.jsonl",
+    "n_examples": 20,
+    "n_missing_completions": 0,
+    "scorer": {
+      "name": "math_final_line_verifier",
+      "version": "1.0.0"
+    }
+  }
+}
