@@ -1,19 +1,19 @@
-# RL Foundations for LLMs — Mapa projektu Mastery Track
+# RL Foundations for LLMs — Plan projektu Mastery Track
 
 ---
 
 ## Przegląd projektu
 
-**Tytuł projektu:** Verifier-Driven Math QA — Konstrukcja, celowe zakłócenie i systematyczne wzmocnienie
+**Tytuł projektu:** Verifier-Driven Math QA — budowa, celowe psucie i systematyczne utwardzanie
 
-Ta ścieżka jest zaprojektowana, aby wymusić zrozumienie poprzez powtarzane zastosowanie ustrukturyzowanego cyklu eksperymentalnego:
+Ta ścieżka ma wymusić zrozumienie: wielokrotnie przejdziesz przez ten sam, uporządkowany cykl eksperymentalny:
 
-1. **Build (Ustanowienie linii bazowej):** Ustanowienie czystej, deterministycznej linii bazowej, nad którą student sprawuje pełną kontrolę.
-2. **Sabotage (Kontrolowana perturbacja):** Wprowadzenie dokładnie jednej jawnej modyfikacji, która narusza podstawową zasadę.
-3. **Reflect (Analiza forensyczna):** Obserwacja wynikającej awarii poprzez badanie artefaktów (`manifest.json`, `summary.json`, `results.jsonl`) zamiast oceny intuicyjnej.
-4. **Repair and Lock (Korekta mechanizmu):** Korekta leżącego u podstaw mechanizmu i zakodowanie poprawki jako testów i bramek, aby zapobiec regresji.
+1. **Build (ustawienie punktu odniesienia):** Budujesz czystą, deterministyczną linię bazową, którą rozumiesz i nad którą masz pełną kontrolę.
+2. **Sabotage (kontrolowane zakłócenie):** Wprowadzasz dokładnie jedną, jawną zmianę, która łamie jedną z kluczowych zasad.
+3. **Reflect (analiza śledcza / forensyczna):** Zamiast oceniać „na oko”, patrzysz w artefakty (`manifest.json`, `summary.json`, `results.jsonl`) i na ich podstawie opisujesz tryb porażki.
+4. **Repair and Lock (napraw i zablokuj):** Naprawiasz mechanizm i kodujesz zabezpieczenie jako testy/bramki, żeby regresja nie wróciła.
 
-Kroki Sabotage stanowią zasadniczy komponent pedagogiczny tej ścieżki i nie mogą być pominięte.
+Kroki **Sabotage** są sercem dydaktyki tej ścieżki — nie pomijaj ich.
 
 ---
 
@@ -23,18 +23,18 @@ Procesy trenowania i ewaluacji LLM łatwo źle zinterpretować. Metryki mogą si
 
 ## Gdzie to ważne w cyklu życia LLM
 
-- Kuracja danych i ewaluacja: utrzymuj stałe dataset, prompt i scorer, aby porównania były ważne.
-- Specyfikacja nagrody i weryfikacja: scorer i modele nagrody to instrumenty produkcyjne, muszą być deterministyczne i wersjonowane.
-- Selection w czasie inferencji: Best-of-N może poprawiać wyniki bez uczenia, więc atrybucja musi być jawna.
-- Trening (SFT/RLHF/DPO): credit assignment, wariancja i ograniczenia KL decydują, czy uczenie jest stabilne i sensowne.
-- Wdrożenie i monitoring: testy regresji, golden sety i bramki zapobiegają cichej degradacji metryk lub reward hacking.
-- Analiza incydentów: forensyka oparta o artefakty pozwala dowieść, co się zmieniło i dlaczego.
+- Przygotowanie danych i ewaluacja: trzymaj stały dataset, prompt i scorer, żeby porównania miały sens.
+- Specyfikacja nagrody i weryfikacja: scorer i modele nagrody to instrumenty używane w produkcji — muszą być deterministyczne i wersjonowane.
+- Selekcja podczas inferencji: Best-of-N potrafi podnieść wyniki bez uczenia, więc atrybucja („skąd poprawa?”) musi być jawna.
+- Trening (SFT/RLHF/DPO): przypisywanie zasług (credit assignment), wariancja i ograniczenia KL decydują, czy uczenie jest stabilne i ma sens.
+- Wdrożenie i monitoring: testy regresji, golden sety i bramki zapobiegają cichej degradacji metryk albo „reward hackingowi”.
+- Analiza incydentów: analiza śledcza oparta na artefaktach pozwala udowodnić, co się zmieniło i dlaczego.
 
 ---
 
 ## Uwaga o zakresie (praktyka)
 
-Te zadania **nie** trenują ani nie próbkują realnego LLM. Praca na "policy" jest syntetyczna, aby mechanika była jasna, więc transfer do systemów LLM jest bardziej koncepcyjny niż praktyczny.
+Te zadania **nie** trenują ani nie próbkują realnego LLM. Część dotycząca „policy” jest tu syntetyczna, żeby mechanika była widoczna jak na dłoni — transfer do prawdziwych systemów LLM jest więc bardziej koncepcyjny niż „kliknij i działa”.
 
 Jeśli chcesz praktycznego ugruntowania, opcjonalnym rozszerzeniem jest podpięcie LLM, wygenerowanie nowych rolloutów i ponowne uruchomienie Loop A/B przy zachowaniu dyscypliny pomiaru.
 
@@ -79,9 +79,9 @@ Te zasady powinny zostać zinternalizowane przed rozpoczęciem pracy praktycznej
 
 Ta terminologia powinna być stosowana konsekwentnie w całej dokumentacji i dyskusji:
 
-* **Loop A (Evaluation):** Wyłącznie operacje pomiarowe (zamrożone wejścia, deterministyczny scorer).
-* **Loop B (Selection):** Wybór best-of-N (obserwowalne zachowanie się poprawia; leżący u podstaw rozkład policy pozostaje niezmieniony).
-* **Loop C (Learning):** Aktualizacje parametrów policy (rozkłady prawdopodobieństwa się przesuwają → zachowanie generatywne się zmienia).
+* **Loop A (Ewaluacja / pomiar):** wyłącznie operacje pomiarowe (zamrożone wejścia, deterministyczny scorer).
+* **Loop B (Selekcja):** wybór best-of-N (obserwowalne wyjścia się poprawiają; leżący u podstaw rozkład policy pozostaje niezmieniony).
+* **Loop C (Uczenie):** aktualizacje parametrów policy (rozkłady prawdopodobieństwa się przesuwają → zachowanie generatywne się zmienia).
 
 ### Zasada Locked Room (poprawne porównania eksperymentalne)
 
@@ -216,7 +216,7 @@ for i in 1 2 3; do
 done
 ```
 
-Jeśli hashe się zgadzają, selection policy jest deterministyczna.
+Jeśli hashe się zgadzają, polityka selekcji jest deterministyczna.
 
 ### 4) Szybka kontrola artefaktów
 
@@ -344,7 +344,7 @@ pytest -q
 
 ---
 
-# Level 0.5: Selection bez Learning — Loop B
+# Level 0.5: Selekcja bez uczenia — Loop B
 
 ## Podstawa koncepcyjna
 
@@ -672,7 +672,7 @@ Cel: zaimplementować małą regułę KL-regularized, zepsuć ją i wyjaśnić r
 
 **Dozwolone modyfikacje:** Utwórz skrypty assignment i notatki. Modyfikacja głównego kodu demonstracji nie jest dozwolona.
 
-### Krok 2 - Build: Selection z regularyzacją KL na danych syntetycznych
+### Krok 2 - Build: Selekcja z regularyzacją KL na danych syntetycznych
 
 Implementujesz regułę wyboru, aby kara KL była konkretna.
 
@@ -944,7 +944,7 @@ python -m course.selection_demo \
   --outdir runs/l6_trap_sel_n4
 ```
 
-### Krok 3 - Pułapka 3: Learning modyfikuje zachowanie
+### Krok 3 - Pułapka 3: Uczenie modyfikuje zachowanie
 
 Pokazujesz realny learning, a następnie argumentujesz promocję na podstawie dowodów i ryzyka holdout.
 
