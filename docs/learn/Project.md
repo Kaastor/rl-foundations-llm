@@ -120,6 +120,17 @@ python -m course.bandit_train --help
 
 If you use Poetry, run commands with `poetry run ...` or activate `poetry shell`.
 
+## Start Here (New Students)
+
+If you are brand new, read "Foundational Rules" once, then jump to "Assignments Start Here" below. Each level follows the same four moves:
+
+1) Build a clean baseline so you have a trusted reference.
+2) Sabotage one variable on purpose to see the failure mode.
+3) Reflect using artifacts so your conclusion is evidence-based.
+4) Repair and lock the fix with tests/notes so it cannot regress.
+
+Every step below includes a short explanation of why you are doing it. If you get lost, return to the "Conceptual Foundation" section at the top of the level.
+
 ### Assignment files
 
 Assignment files include TODOs where you should implement missing logic. Tests are provided as scaffolds and will fail until you complete the assignments.
@@ -199,69 +210,9 @@ For any run in `runs/<name>/`, confirm:
 - `results.jsonl` exists and includes per-example records.
 - `summary.json` exists and matches the expected metric direction for that level.
 
-## Assignment Descriptions
+## Assignments Start Here (Step-by-step)
 
-## Rubric (what “correct” looks like)
-
-Use this as a checklist to evaluate your work without external help. If a row fails, investigate artifacts and fix before moving on.
-
-### Level 0 — Loop A (Measurement hygiene)
-- **Build run:** `pass_rate` in `runs/l0_build_eval/summary.json` is between 0 and 1.
-- **Sabotage run:** `runs/l0_sabotage_eval_tampered` has a different dataset hash than the build run (see `manifest.json`).
-- **Gate:** `python -m course.gate` outputs `REJECT` with a Locked Room violation.
-- **Mental map:** `notes/mental_map_v1.md` defines required terms and includes A/B/C distinctions.
-- **Kata:** `classify()` maps format errors to `model_format` and `"wrong_answer"` to `model_math`.
-
-### Level 0.5 — Loop B (Selection)
-- **Build:** `pass_at_n` > `pass_at_1` in `runs/l0_5_build_sel_n4/summary.json`.
-- **Sabotage:** hashes of `results.jsonl` differ across repeated runs with random tie-breaks.
-- **Repair:** hashes match across repeated runs; selection deterministic.
-- **Tie-break policy:** uses logprob → length → lexicographic order.
-
-### Level 1 — Loop C (REINFORCE)
-- **Build:** `mean_reward` improves over time (see `summary.json` or slow logs).
-- **Sabotage (lr negative):** `mean_reward` is much lower than the build run.
-- **Forensics:** `notes/reinforce_forensics.md` shows correct advantage sign reasoning.
-
-### Level 2 — Credit assignment + token boundary
-- **Token inspect:** format variants tokenize differently.
-- **Two-step build:** `mean_reward` near 1.0 and step‑1 policy becomes non‑uniform.
-- **Sabotage:** with no step‑1 updates, step‑1 policy stays ~uniform and `mean_reward` drops.
-- **Repair:** build behavior returns.
-
-### Level 3 — KL tradeoff
-- **KL demo:** `runs/l3_build_kl_demo/kl_tradeoff.csv` exists.
-- **KL choice:** chosen action differs for `beta=0.1` vs `beta=1.0`.
-- **Notes:** `notes/kl_tradeoff.md` explains why `beta=0` is risky.
-
-### Level 4 — Scorer as production code
-- **Golden tests:** both golden sets pass after repair.
-- **Sabotage evidence:** one exploit fails (incorrectly passes) when a rule is weakened.
-- **Lock:** regression tests include both correct cases and exploit cases.
-
-### Level 5 — Reward exploitation
-- **Naive verifier:** exploit strings receive reward under naive rules.
-- **Patched verifier:** same exploit strings fail.
-- **Report:** `notes/red_team_report.md` lists exploits and patch strategy.
-
-### Level 6 — Promotion committee
-- **Trap 1:** REJECT with Locked Room violation evidence.
-- **Trap 2:** selection improvement without learning; should be rejected for promotion.
-- **Trap 3:** learning run shows improved reward; promotion is conditional on holdout.
-
----
-
-## Run Documentation Template
-
-The following template should be completed for each experimental run in `runs/<name>/README.md`:
-
-* **Loop:** A / B / C
-* **Variable Modified (select exactly one):** measurement instrument / selection compute / policy / environment
-* **Locked Room Evidence:** (dataset fingerprints + scorer version; direct quotation from manifest)
-* **Expected Outcome:**
-* **Observed Outcome (quantitative):**
-* **Two Concrete Examples:** (example id + outcome code + observed behavior)
-* **Repair Plan:** (single sentence)
+From here down, follow the levels in order. Each level is a step-by-step narrative with a short explanation for why you are doing each action. Do not skip sabotage or repair; the contrast is the lesson.
 
 ---
 
@@ -273,11 +224,20 @@ The following template should be completed for each experimental run in `runs/<n
 
 **Correct mental model:** "Loop A constitutes a measurement instrument verification. If the measured value changed, either (a) the policy changed, or (b) the measurement conditions changed. The objective is to determine which."
 
+
+## First-run checklist
+
+- Inputs: `data/datasets/math_dev.jsonl`, `data/rollouts/frozen_rollouts_dev.jsonl`
+- Outputs: `runs/l0_build_eval`, `runs/l0_sabotage_eval_tampered` with manifest/results/summary
+- Edits: `notes/mental_map_v1.md`, `course/assignments/kata_01.py`, `tests/test_kata_01.py`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Execute a Clean Loop A Evaluation
+### Step 1 - Build: Execute a Clean Loop A Evaluation
+
+You are creating a clean baseline run so later comparisons have a trustworthy reference.
 
 ```bash
 python -m course.eval \
@@ -288,7 +248,9 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
-### Sabotage Phase: Introduce Dataset Tampering (Locked Room Violation)
+### Step 2 - Sabotage: Introduce Dataset Tampering (Locked Room Violation)
+
+You intentionally change one label to show how metrics can move without any policy change.
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
@@ -300,7 +262,9 @@ python -m course.eval \
   --outdir runs/l0_sabotage_eval_tampered
 ```
 
-### Reflect Phase: Invoke the Gate to Assess Comparability
+### Step 3 - Reflect: Invoke the Gate to Assess Comparability
+
+You use the gate to prove the runs are not comparable; the expected REJECT is the guardrail.
 
 ```bash
 python -m course.gate \
@@ -314,6 +278,8 @@ The expected output is **REJECT** with diagnostic information indicating Locked 
 ---
 
 ## Capstone Tasks
+
+Purpose: document the mental model and lock concepts with a small kata.
 
 **Permitted Modifications:** Files under `notes/`, `course/assignments/`, `tests/`, and new files under `data/`.
 Scorer code modifications are not permitted at this level.
@@ -370,11 +336,20 @@ pytest -q
 
 **Correct mental model:** "Loop B modifies the decision rule over samples (selection compute). The underlying policy distribution remains unchanged."
 
+
+## First-run checklist
+
+- Inputs: `data/datasets/math_dev.jsonl`, `data/rollouts/selection_pack_dev.jsonl`
+- Outputs: `runs/l0_5_build_sel_n4`, `runs/l0_5_sabotage_sel_random_*`, `runs/l0_5_fixed_sel_n4`
+- Edits: `course/assignments/selection_policy.py`, `tests/test_selection_policy.py`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Execute Selection Demo on Provided Data
+### Step 1 - Build: Execute Selection Demo on Provided Data
+
+You are establishing a baseline selection run to compare against later changes.
 
 ```bash
 python -m course.selection_demo \
@@ -386,7 +361,9 @@ python -m course.selection_demo \
 python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
-### Sabotage Phase: Introduce Nondeterminism into Tie-Breaking
+### Step 2 - Sabotage: Introduce Nondeterminism into Tie-Breaking
+
+You inject randomness to show how nondeterministic tie-breaks create unstable artifacts.
 
 Edit `course/assignments/selection_policy.py`.
 
@@ -411,7 +388,9 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-### Reflect Phase: Demonstrate Variance Through Artifact Analysis
+### Step 3 - Reflect: Demonstrate Variance Through Artifact Analysis
+
+You confirm nondeterminism by showing that run outputs hash differently.
 
 Compute a hash of each `results.jsonl`. If selection is nondeterministic, hashes will differ:
 
@@ -424,6 +403,8 @@ done
 ---
 
 ## Capstone Tasks
+
+Purpose: repair the selection policy and lock determinism with tests.
 
 **Permitted Modifications:** `course/assignments/selection_policy.py` and associated tests only.
 
@@ -474,17 +455,28 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 
 **Correct mental model:** "RL adjusts probability distributions. The update direction is controlled by advantage = reward − baseline. Baselines reduce variance without altering the optimization objective."
 
+
+## First-run checklist
+
+- Inputs: none (synthetic bandit)
+- Outputs: `runs/l1_build_bandit`, `runs/l1_sabotage_lr2`, `runs/l1_sabotage_lrneg`, `runs/l1_build_slow`, `runs/l1_sabotage_slow_lrneg`
+- Edits: `notes/reinforce_forensics.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Stable Learning with Baseline
+### Step 1 - Build: Stable Learning with Baseline
+
+You establish a healthy learning baseline so you can recognize later failures.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
-### Sabotage Phase: Over-Optimization and Inverted Learning
+### Step 2 - Sabotage: Over-Optimization and Inverted Learning
+
+You intentionally destabilize learning to observe two distinct failure modes.
 
 Execute two sabotage experiments:
 
@@ -500,7 +492,9 @@ python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir 
 python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
-### Reflect Phase: Step-by-Step Mechanism Observation
+### Step 3 - Reflect: Step-by-Step Mechanism Observation
+
+Slow mode lets you inspect how advantage signs change probabilities step by step.
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
@@ -510,6 +504,8 @@ python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --
 ---
 
 ## Capstone Tasks
+
+Purpose: write a short forensics note linking advantage signs to update direction.
 
 **Permitted Modifications:** Files under `notes/` and `course/assignments/`. Modification of `course/bandit_train.py` is not permitted.
 
@@ -541,11 +537,20 @@ Conclude with one paragraph explaining the behavioral differences observed in sa
 
 **Correct mental model:** "In sequential generation, early decisions constrain subsequent states. Terminal reward becomes a training signal propagated across the sampled trajectory (credit assignment). Additionally: policy operates in token space; verification operates in text space."
 
+
+## First-run checklist
+
+- Inputs: none (token inspection uses fixed strings)
+- Outputs: `runs/l2_build_two_step`, `runs/l2_sabotage_no_credit_step1`, `runs/l2_fixed_two_step`
+- Edits: `course/assignments/two_step_mdp_demo.py`, `notes/credit_assignment.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Token Boundary Observation
+### Step 1 - Build: Token Boundary Observation
+
+You observe how small formatting changes create different tokenizations, which explains why format rules matter.
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -558,9 +563,13 @@ python -m course.token_inspect "Final: 0323"
 
 ## Capstone Tasks
 
+Purpose: build a two-step MDP demo, break it, then fix it and explain why.
+
 **Permitted Modifications:** Create `course/assignments/two_step_mdp_demo.py` and associated notes. Scorer modification is not permitted.
 
-### Build: Correct Two-Step REINFORCE Implementation
+### Step 2 - Build: Correct Two-Step REINFORCE Implementation
+
+You implement a two-step environment so credit assignment across time steps is visible.
 
 Create `course/assignments/two_step_mdp_demo.py`:
 
@@ -573,7 +582,9 @@ Create `course/assignments/two_step_mdp_demo.py`:
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_build_two_step
 ```
 
-### Sabotage: Remove Credit Assignment for Step 1
+### Step 3 - Sabotage: Remove Credit Assignment for Step 1
+
+You remove step-1 updates to show what breaks when credit assignment is missing.
 
 Modify the script such that **only step 2 receives updates** (step 1 remains uniformly random):
 
@@ -581,7 +592,9 @@ Modify the script such that **only step 2 receives updates** (step 1 remains uni
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_sabotage_no_credit_step1
 ```
 
-### Repair: Restore Step 1 Updates
+### Step 4 - Repair: Restore Step 1 Updates
+
+You restore step-1 updates to recover learning and compare artifacts.
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
@@ -589,7 +602,9 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 Create `notes/credit_assignment.md`:
 
-* Explain what failed during sabotage and the underlying cause
+Explain in plain language what failed during sabotage and why the repair works. Include:
+
+* A short description of the failure and its cause
 * Include a diagram: tokens → detokenization → text → parsing → reward
 
 ---
@@ -610,11 +625,20 @@ Create `notes/credit_assignment.md`:
 
 **Correct mental model:** "KL divergence functions as a practical constraint: maximize reward while penalizing excessive divergence from a reference distribution."
 
+
+## First-run checklist
+
+- Inputs: none (demo uses synthetic policies)
+- Outputs: `runs/l3_build_kl_demo`, `runs/l3_build_kl_choice.txt`, `runs/l3_sabotage_no_kl.txt`
+- Edits: `course/assignments/kl_regularized_choice.py`, `notes/kl_tradeoff.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Execute KL Tradeoff Demonstration
+### Step 1 - Build: Execute KL Tradeoff Demonstration
+
+You run the demo to see the reward vs KL tradeoff before writing code.
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
@@ -624,9 +648,13 @@ python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 
 ## Capstone Tasks
 
+Purpose: implement a tiny KL-regularized choice rule, break it, and explain the difference.
+
 **Permitted Modifications:** Create assignment scripts and notes. Core demonstration code modification is not permitted.
 
-### Build: KL-Regularized Selection on Synthetic Data
+### Step 2 - Build: KL-Regularized Selection on Synthetic Data
+
+You implement the selection rule so the KL penalty is concrete.
 
 Create `course/assignments/kl_regularized_choice.py`:
 
@@ -638,7 +666,9 @@ Create `course/assignments/kl_regularized_choice.py`:
 python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 ```
 
-### Sabotage: Remove Regularization Constraint (beta = 0)
+### Step 3 - Sabotage: Remove Regularization Constraint (beta = 0)
+
+You remove the constraint to see how the choice shifts when KL is ignored.
 
 Modify the script to set beta = 0:
 
@@ -646,7 +676,9 @@ Modify the script to set beta = 0:
 python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 ```
 
-### Reflect
+### Step 4 - Reflect
+
+You document why the unconstrained choice is tempting but risky.
 
 Create `notes/kl_tradeoff.md`:
 
@@ -671,11 +703,20 @@ Create `notes/kl_tradeoff.md`:
 
 **Correct mental model:** "The scorer defines the task specification and must be treated as production measurement software."
 
+
+## First-run checklist
+
+- Inputs: `data/datasets/math_dev.jsonl`, `data/golden/golden_correct.jsonl`, `data/golden/golden_exploits.jsonl`
+- Outputs: `data/golden/golden_exploits_extra.jsonl`, `tests/test_reward_regressions.py`
+- Edits: `course/core/scoring.py`, `notes/reward_spec_blackbox.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Validate Scorer Against Golden Test Cases
+### Step 1 - Build: Validate Scorer Against Golden Test Cases
+
+You establish the current scorer behavior so later changes are measurable.
 
 ```bash
 python -m course.validate_scorer \
@@ -691,17 +732,23 @@ python -m course.validate_scorer \
 
 ## Capstone Tasks
 
+Purpose: probe the scorer, introduce a deliberate weakness, then restore and lock it.
+
 **Permitted Modifications:** `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
 Selection and learning code modifications are not permitted at this level.
 
-### Build: Black-Box Specification Probing
+### Step 2 - Build: Black-Box Specification Probing
+
+You infer the spec by observation, which is how you reason about black-box verifiers.
 
 Create `notes/reward_spec_blackbox.md`:
 
 * Document the format rules you believe exist based on observed behavior
 * Include 8 probe strings with predicted outcome codes
 
-### Sabotage: Relax One Specification Rule
+### Step 3 - Sabotage: Relax One Specification Rule
+
+You weaken one rule to see how exploits slip through.
 
 Select one strict rule in `course/core/scoring.py` and deliberately weaken it (examples):
 
@@ -717,7 +764,9 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-### Repair and Lock: Restore Strictness and Expand Test Coverage
+### Step 4 - Repair and Lock: Restore Strictness and Expand Test Coverage
+
+You restore the spec and lock it with tests and golden cases.
 
 1. Restore correct specification behavior.
 2. Create `tests/test_reward_regressions.py` with **at least 6** test cases:
@@ -752,11 +801,20 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 
 **Correct mental model:** "Optimizers exploit proxy measures. If the specification contains loopholes, optimization will discover them. The solution is to patch mechanism classes and lock them with tests."
 
+
+## First-run checklist
+
+- Inputs: optional baseline uses `data/datasets/math_dev.jsonl`, `data/rollouts/frozen_rollouts_dev.jsonl`
+- Outputs: `runs/l5_build_eval_context` (optional)
+- Edits: `course/assignments/hackable_scorer_demo.py`, `notes/red_team_report.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Build Phase: Establish Baseline Context (Optional)
+### Step 1 - Build: Establish Baseline Context (Optional)
+
+You refresh context on how the current evaluator behaves; this is optional baseline evidence.
 
 ```bash
 python -m course.eval \
@@ -771,20 +829,28 @@ python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top
 
 ## Capstone Tasks
 
+Purpose: build a naive verifier, exploit it, then patch the exploit class.
+
 **Permitted Modifications:** New assignment files, notes, and tests. Modifications to the production scorer should be treated as instrument changes requiring version increment.
 
-### Build: Implement a Deliberately Naive Verifier
+### Step 2 - Build: Implement a Deliberately Naive Verifier
+
+You create a deliberately weak verifier so you can study how it fails.
 
 Create `course/assignments/hackable_scorer_demo.py`:
 
 * Assign reward = 1 if the expected integer appears anywhere in the completion (naive substring/regex approach)
 * Demonstrate that it produces correct results on honest completions
 
-### Sabotage: Generate 5 Exploits
+### Step 3 - Sabotage: Generate 5 Exploits
+
+You craft exploit completions that pass the naive check without solving the problem.
 
 Create 5 completions that achieve reward = 1 without constituting valid solutions (e.g., number enumeration).
 
-### Repair: Patch the Exploit Class
+### Step 4 - Repair: Patch the Exploit Class
+
+You patch the exploit class (not just the specific strings) and document the fix.
 
 Modify the demonstration verifier to close the exploit class (not merely the specific exploit strings).
 
@@ -813,11 +879,20 @@ Create `notes/red_team_report.md`:
 
 **Correct mental model:** "A promotable improvement must satisfy Locked Room comparability and be attributable to exactly one controlled variable."
 
+
+## First-run checklist
+
+- Inputs: `runs/l0_build_eval`, `runs/l0_sabotage_eval_tampered`, `data/rollouts/selection_pack_dev.jsonl`
+- Outputs: `runs/l6_trap_sel_n1`, `runs/l6_trap_sel_n4`, `runs/l6_trap_learning`
+- Edits: `notes/promotion_memo.md`
+
 ---
 
-## Procedural Steps
+## Step-by-step
 
-### Trap 1 (Sabotage): Invalid Promotion via Instrument Change
+### Step 1 - Trap 1 (Sabotage): Invalid Promotion via Instrument Change
+
+You attempt a promotion based on a Locked Room violation to show why the gate exists.
 
 Use the previously tampered dataset run (or create a new one), then invoke the gate:
 
@@ -828,7 +903,9 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-### Trap 2: Selection Improvement Without Learning
+### Step 2 - Trap 2: Selection Improvement Without Learning
+
+You show how metrics can improve without any learning, so promotion is not justified.
 
 ```bash
 python -m course.selection_demo \
@@ -844,7 +921,9 @@ python -m course.selection_demo \
   --outdir runs/l6_trap_sel_n4
 ```
 
-### Trap 3: Learning Modifies Behavior
+### Step 3 - Trap 3: Learning Modifies Behavior
+
+You show a real learning run, then argue promotion based on evidence and holdout risk.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
@@ -853,6 +932,8 @@ python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir 
 ---
 
 ## Capstone Tasks
+
+Purpose: write a short promotion memo that argues from artifacts, not intuition.
 
 Create `notes/promotion_memo.md` (maximum 1 page):
 
@@ -877,3 +958,67 @@ Create `notes/promotion_memo.md` (maximum 1 page):
 ## Track Completion Summary
 
 Successful completion of this track establishes the core competency this course targets: the ability to execute and interpret RL-for-LLMs experiments without conflating **measurement**, **selection**, and **learning**, and without accepting methodologically invalid comparisons.
+
+---
+
+## Appendix
+
+### Rubric (what “correct” looks like)
+
+Use this as a checklist to evaluate your work without external help. If a row fails, investigate artifacts and fix before moving on.
+
+#### Level 0 — Loop A (Measurement hygiene)
+- **Build run:** `pass_rate` in `runs/l0_build_eval/summary.json` is between 0 and 1.
+- **Sabotage run:** `runs/l0_sabotage_eval_tampered` has a different dataset hash than the build run (see `manifest.json`).
+- **Gate:** `python -m course.gate` outputs `REJECT` with a Locked Room violation.
+- **Mental map:** `notes/mental_map_v1.md` defines required terms and includes A/B/C distinctions.
+- **Kata:** `classify()` maps format errors to `model_format` and `"wrong_answer"` to `model_math`.
+
+#### Level 0.5 — Loop B (Selection)
+- **Build:** `pass_at_n` > `pass_at_1` in `runs/l0_5_build_sel_n4/summary.json`.
+- **Sabotage:** hashes of `results.jsonl` differ across repeated runs with random tie-breaks.
+- **Repair:** hashes match across repeated runs; selection deterministic.
+- **Tie-break policy:** uses logprob → length → lexicographic order.
+
+#### Level 1 — Loop C (REINFORCE)
+- **Build:** `mean_reward` improves over time (see `summary.json` or slow logs).
+- **Sabotage (lr negative):** `mean_reward` is much lower than the build run.
+- **Forensics:** `notes/reinforce_forensics.md` shows correct advantage sign reasoning.
+
+#### Level 2 — Credit assignment + token boundary
+- **Token inspect:** format variants tokenize differently.
+- **Two-step build:** `mean_reward` near 1.0 and step‑1 policy becomes non‑uniform.
+- **Sabotage:** with no step‑1 updates, step‑1 policy stays ~uniform and `mean_reward` drops.
+- **Repair:** build behavior returns.
+
+#### Level 3 — KL tradeoff
+- **KL demo:** `runs/l3_build_kl_demo/kl_tradeoff.csv` exists.
+- **KL choice:** chosen action differs for `beta=0.1` vs `beta=1.0`.
+- **Notes:** `notes/kl_tradeoff.md` explains why `beta=0` is risky.
+
+#### Level 4 — Scorer as production code
+- **Golden tests:** both golden sets pass after repair.
+- **Sabotage evidence:** one exploit fails (incorrectly passes) when a rule is weakened.
+- **Lock:** regression tests include both correct cases and exploit cases.
+
+#### Level 5 — Reward exploitation
+- **Naive verifier:** exploit strings receive reward under naive rules.
+- **Patched verifier:** same exploit strings fail.
+- **Report:** `notes/red_team_report.md` lists exploits and patch strategy.
+
+#### Level 6 — Promotion committee
+- **Trap 1:** REJECT with Locked Room violation evidence.
+- **Trap 2:** selection improvement without learning; should be rejected for promotion.
+- **Trap 3:** learning run shows improved reward; promotion is conditional on holdout.
+
+### Run Documentation Template
+
+The following template should be completed for each experimental run in `runs/<name>/README.md`:
+
+* **Loop:** A / B / C
+* **Variable Modified (select exactly one):** measurement instrument / selection compute / policy / environment
+* **Locked Room Evidence:** (dataset fingerprints + scorer version; direct quotation from manifest)
+* **Expected Outcome:**
+* **Observed Outcome (quantitative):**
+* **Two Concrete Examples:** (example id + outcome code + observed behavior)
+* **Repair Plan:** (single sentence)
