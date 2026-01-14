@@ -8,6 +8,7 @@ mkdir -p "${DEST}"
 
 rsync -a --delete \
   --exclude ".git/" \
+  --exclude "scripts/" \
   --exclude "course_repo/" \
   --exclude ".env" \
   --exclude "notes/" \
@@ -20,6 +21,7 @@ rsync -a --delete \
   --exclude "tests/test_selection_policy.py" \
   --exclude "tests/test_reward_regressions.py" \
   --exclude "docs/solution_walkthrough.md" \
+  --exclude "docs/papers/" \
   --exclude "data/datasets/math_dev_TAMPERED.jsonl" \
   --exclude "data/golden/golden_exploits_extra.jsonl" \
   --exclude "AGENTS.md" \
