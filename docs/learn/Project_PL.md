@@ -1,83 +1,100 @@
-# RL Foundations for LLMs
-
-**Projekt:** *Verifier-Driven Math QA — Zbuduj „działający samochód", następnie go zepsuj, potem wzmocnij.*
-
-Ta ścieżka jest zaprojektowana, aby „wymusić" zrozumienie poprzez powtarzanie tego samego cyklu:
-
-1. **Build (działający samochód):** uzyskaj czystą, deterministyczną linię bazową, którą w pełni kontrolujesz.
-2. **Sabotage (zepsuj):** wprowadź jedną małą, jawną zmianę, która łamie podstawową zasadę.
-3. **Reflect (forensics):** obserwuj awarię używając artefaktów (`manifest.json`, `summary.json`, `results.jsonl`) zamiast intuicji.
-4. **Repair + Lock:** napraw *mechanizm* i zakoduj go jako testy + bramki, aby nie mógł ulec regresji.
-
-**Nie pomijaj kroków Sabotage.** To jest cały sens.
+# RL Foundations for LLMs — Mapa projektu Mastery Track
 
 ---
 
-## Podstawowe reguły (zapamiętaj je wcześnie)
+## Przegląd projektu
 
-### Trzy pętle (używaj tej terminologii)
+**Tytuł projektu:** Verifier-Driven Math QA — Konstrukcja, celowe zakłócenie i systematyczne wzmocnienie
 
-* **Loop A (Eval):** tylko pomiar (zamrożone wejścia, deterministyczny scorer).
-* **Loop B (Selection):** wybierz best-of-N (zachowanie się poprawia; leżący u podstaw rozkład policy nie).
-* **Loop C (Learning):** aktualizuj policy (prawdopodobieństwa się przesuwają → rozkład się przesuwa).
+Ta ścieżka jest zaprojektowana, aby wymusić zrozumienie poprzez powtarzane zastosowanie ustrukturyzowanego cyklu eksperymentalnego:
 
-### Zasada Locked Room (poprawne porównania)
+1. **Build (Ustanowienie linii bazowej):** Ustanowienie czystej, deterministycznej linii bazowej, nad którą student sprawuje pełną kontrolę.
+2. **Sabotage (Kontrolowana perturbacja):** Wprowadzenie dokładnie jednej jawnej modyfikacji, która narusza podstawową zasadę.
+3. **Reflect (Analiza forensyczna):** Obserwacja wynikającej awarii poprzez badanie artefaktów (`manifest.json`, `summary.json`, `results.jsonl`) zamiast oceny intuicyjnej.
+4. **Repair and Lock (Korekta mechanizmu):** Korekta leżącego u podstaw mechanizmu i zakodowanie poprawki jako testów i bramek, aby zapobiec regresji.
 
-Zanim porównasz dwa numery uruchomień, musisz zweryfikować, że te są identyczne:
-
-* podział datasetu (ten sam fingerprint pliku w `manifest.json`)
-* tekst promptu (jeśli dotyczy)
-* **nazwa + wersja** scorera
-* ustawienia próbkowania (jeśli dotyczy)
-
-Jeśli którekolwiek się różnią, zmieniłeś środowisko/instrument. To porównanie jest nieważne.
-
-### Reward = Spec (traktuj `score()` jak kod produkcyjny)
-
-Twój scorer jest instrumentem pomiarowym. Musi być:
-**deterministyczny**, **totalny (nigdy się nie crashuje)**, **wyjaśnialny**, **szybki**, **wersjonowany**.
+Kroki Sabotage stanowią zasadniczy komponent pedagogiczny tej ścieżki i nie mogą być pominięte.
 
 ---
 
-## Dyscyplina workflow (silnie zalecana)
+## Reguły fundamentalne
 
-Stwórz branch i rób małe commity, abyś mógł udowodnić, co się zmieniło.
+Te zasady powinny zostać zinternalizowane przed rozpoczęciem pracy praktycznej.
+
+### Trzy pętle operacyjne
+
+Ta terminologia powinna być stosowana konsekwentnie w całej dokumentacji i dyskusji:
+
+* **Loop A (Evaluation):** Wyłącznie operacje pomiarowe (zamrożone wejścia, deterministyczny scorer).
+* **Loop B (Selection):** Wybór best-of-N (obserwowalne zachowanie się poprawia; leżący u podstaw rozkład policy pozostaje niezmieniony).
+* **Loop C (Learning):** Aktualizacje parametrów policy (rozkłady prawdopodobieństwa się przesuwają → zachowanie generatywne się zmienia).
+
+### Zasada Locked Room (poprawne porównania eksperymentalne)
+
+Przed porównaniem metryk między dwoma przebiegami eksperymentalnymi, następujące warunki muszą być zweryfikowane jako identyczne:
+
+* Podział datasetu (identyczny fingerprint pliku zapisany w `manifest.json`)
+* Tekst promptu (jeśli dotyczy projektu eksperymentalnego)
+* **Nazwa i wersja** scorera
+* Konfiguracja próbkowania (jeśli stosowane jest próbkowanie stochastyczne)
+
+Jeśli którykolwiek z tych warunków różni się między przebiegami, środowisko eksperymentalne lub instrument pomiarowy został zmieniony. Takie porównania są metodologicznie nieważne.
+
+### Specyfikacja nagrody jako kod produkcyjny
+
+Scorer funkcjonuje jako instrument pomiarowy i dlatego musi wykazywać następujące właściwości:
+**deterministyczny**, **totalny (nigdy nie kończy się anormalnie)**, **wyjaśnialny**, **obliczeniowo wydajny**, **wersjonowany**.
+
+Funkcja `score()` powinna być traktowana z tym samym rygorem co oprogramowanie produkcyjne.
+
+---
+
+## Dyscyplina workflow
+
+Następujące praktyki są silnie zalecane:
+
+Utwórz dedykowany branch i commituj inkrementalnie, aby utrzymać weryfikowalny zapis modyfikacji.
 
 ```bash
 git checkout -b mastery-track
 pytest -q
 ```
 
-Dla każdego poziomu zrób:
+Dla każdego poziomu wykonaj następującą sekwencję commitów:
 
-* Commit stanu **Build**.
-* Commit zmiany **Sabotage** (nawet jeśli jest „błędna").
-* Commit **Fix**.
+* Commit stanu **Build** (ustanowienie linii bazowej).
+* Commit modyfikacji **Sabotage** (mimo że wprowadza celową awarię).
+* Commit **Repair** (poprawka i środki zapobiegawcze).
 
 ---
 
-## Szablon notatki z uruchomienia (umieść to w każdym `runs/<name>/README.md`)
+## Szablon dokumentacji uruchomienia
+
+Następujący szablon powinien być wypełniony dla każdego przebiegu eksperymentalnego w `runs/<name>/README.md`:
 
 * **Loop:** A / B / C
-* **Pokrętło przekręcone (wybierz JEDNO):** instrument pomiarowy / compute selection / policy / środowisko
-* **Dowód Locked Room:** (fingerprinty datasetu + wersja scorera; cytat z manifestu)
-* **Czego oczekiwałem:**
-* **Co się stało (liczby):**
-* **Dwa konkretne przykłady:** (id + outcome code + co zobaczyłem)
+* **Zmodyfikowana zmienna (wybierz dokładnie jedną):** instrument pomiarowy / compute selection / policy / środowisko
+* **Dowód Locked Room:** (fingerprinty datasetu + wersja scorera; bezpośredni cytat z manifestu)
+* **Oczekiwany wynik:**
+* **Zaobserwowany wynik (ilościowy):**
+* **Dwa konkretne przykłady:** (id przykładu + outcome code + zaobserwowane zachowanie)
 * **Plan naprawy:** (jedno zdanie)
 
 ---
 
-# Level 0: Higiena pomiarowa (Build → Tamper → Catch It) — Loop A
+# Level 0: Higiena pomiarowa — Loop A
 
-## 1) Zmiana nastawienia
+## Podstawa koncepcyjna
 
-**Błędna intuicja:** „Model jest głupi."
-**Poprawny model mentalny:** „Loop A jest sprawdzeniem instrumentu pomiarowego. Jeśli liczba się zmieniła, to albo (a) policy się zmieniła, albo (b) warunki pomiaru się zmieniły. Moim zadaniem jest udowodnić, które."
+**Błędna intuicja:** „Model działa słabo."
 
-## 2) Działania studenta (dokładne CLI)
+**Poprawny model mentalny:** „Loop A stanowi weryfikację instrumentu pomiarowego. Jeśli zmierzona wartość się zmieniła, to albo (a) policy się zmieniła, albo (b) warunki pomiaru się zmieniły. Celem jest określenie, które."
 
-### Build (działający samochód): uruchom czysty Loop A eval
+---
+
+## Kroki proceduralne
+
+### Faza Build: Wykonanie czystej ewaluacji Loop A
 
 ```bash
 python -m course.eval \
@@ -88,11 +105,11 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
-### Sabotage (zepsuj): zmanipuluj dataset (naruszenie Locked Room)
+### Faza Sabotage: Wprowadzenie manipulacji datasetu (naruszenie Locked Room)
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
-# Ręcznie edytuj dokładnie JEDEN expected_answer w zmanipulowanym pliku.
+# Ręcznie zmodyfikuj dokładnie JEDEN expected_answer w zmanipulowanym pliku.
 
 python -m course.eval \
   --dataset data/datasets/math_dev_TAMPERED.jsonl \
@@ -100,7 +117,7 @@ python -m course.eval \
   --outdir runs/l0_sabotage_eval_tampered
 ```
 
-### Reflect (forensics): zmuś bramkę do oceny porównywalności
+### Faza Reflect: Wywołanie bramki do oceny porównywalności
 
 ```bash
 python -m course.gate \
@@ -109,23 +126,25 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-Powinieneś zobaczyć **REJECT** z powodami wskazującymi na niekompatybilność Locked Room.
+Oczekiwane wyjście to **REJECT** z informacjami diagnostycznymi wskazującymi na niekompatybilność Locked Room.
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Dozwolone zmiany: `notes/`, `course/assignments/`, `tests/`, nowe pliki pod `data/`.
-Nie zmieniaj jeszcze kodu scorera.
+## Zadania Capstone
 
-### Task A — Napisz model mentalny
+**Dozwolone modyfikacje:** Pliki pod `notes/`, `course/assignments/`, `tests/` i nowe pliki pod `data/`.
+Modyfikacje kodu scorera nie są dozwolone na tym poziomie.
 
-Stwórz `notes/mental_map_v1.md` (1–2 strony):
+### Zadanie A — Dokumentacja modelu mentalnego
 
-* zdefiniuj: reward, metric, objective, loss, policy, environment
-* narysuj Loop A/B/C i oznacz pokrętło dla każdej
+Utwórz `notes/mental_map_v1.md` (1–2 strony):
 
-### Task B — Debugging Kata (autograded)
+* Zdefiniuj następujące terminy: reward, metric, objective, loss, policy, environment
+* Narysuj diagram Loop A/B/C z zidentyfikowaną główną zmienną dla każdej
 
-Stwórz `course/assignments/kata_01.py`:
+### Zadanie B — Debugging Kata (ocena automatyczna)
+
+Utwórz `course/assignments/kata_01.py`:
 
 ```python
 def classify(outcome_code: str) -> str:
@@ -138,36 +157,41 @@ def classify(outcome_code: str) -> str:
     """
 ```
 
-Stwórz `tests/test_kata_01.py` z małym kluczem odpowiedzi. Minimalne wymagane mapowanie:
+Utwórz `tests/test_kata_01.py` z odpowiednimi przypadkami testowymi. Minimalne wymagane mapowania:
 
 * `"wrong_answer"` → `model_math`
-* dowolny kod parse-format (np. `"missing_prefix"`, `"extra_whitespace"`, `"not_single_line"`, `"leading_zeros"`) → `model_format`
+* Dowolny kod parse-format (np. `"missing_prefix"`, `"extra_whitespace"`, `"not_single_line"`, `"leading_zeros"`) → `model_format`
 * `"invalid_example"` → `data_invalid`
 
-Uruchom:
+Wykonaj weryfikację:
 
 ```bash
 pytest -q
 ```
 
-## 4) Lista kontrolna „Passed"
+---
 
-* Jeśli dwa uruchomienia eval się różnią, czy potrafisz wymienić jedyne poprawne przyczyny i wskazać dowody w `manifest.json`?
-* Czy potrafisz wyjaśnić różnicę między **błędem formatu** a **błędem matematycznym** używając outcome codes?
-* Czy potrafisz wyjaśnić, dlaczego „zmanipulowany dataset poprawił pass_rate" nie jest poprawą?
+## Kryteria ukończenia
+
+* Mając dwa przebiegi ewaluacji z różniącymi się wynikami, czy potrafisz wyliczyć poprawne przyczyny i dostarczyć dowody z `manifest.json`?
+* Czy potrafisz wyartykułować rozróżnienie między **błędem formatu** a **błędem matematycznym** używając outcome codes?
+* Czy potrafisz wyjaśnić, dlaczego „zmanipulowany dataset poprawił pass_rate" nie stanowi poprawnej poprawy?
 
 ---
 
-# Level 0.5: Selection to nie Learning (Build → Randomize → Measure Variance → Fix) — Loop B
+# Level 0.5: Selection bez Learning — Loop B
 
-## 1) Zmiana nastawienia
+## Podstawa koncepcyjna
 
 **Błędna intuicja:** „pass@N się poprawił, więc model się nauczył."
-**Poprawny model mentalny:** „Loop B zmienia regułę decyzyjną nad próbkami (compute selection). Leżący u podstaw rozkład policy pozostaje niezmieniony."
 
-## 2) Działania studenta (dokładne CLI)
+**Poprawny model mentalny:** „Loop B modyfikuje regułę decyzyjną nad próbkami (compute selection). Leżący u podstaw rozkład policy pozostaje niezmieniony."
 
-### Build (działający samochód): uruchom selection demo na dostarczonym packu
+---
+
+## Kroki proceduralne
+
+### Faza Build: Wykonanie demo selection na dostarczonych danych
 
 ```bash
 python -m course.selection_demo \
@@ -179,11 +203,11 @@ python -m course.selection_demo \
 python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
-### Sabotage (zepsuj): wprowadź niedeterminizm do tie-breaking
+### Faza Sabotage: Wprowadzenie niedeterminizmu do tie-breaking
 
 Edytuj `course/assignments/selection_policy.py`.
 
-Zmień `tie_break_key` na coś jawnie losowego (celowo):
+Zmodyfikuj `tie_break_key`, aby uwzględniał jawną losowość:
 
 ```python
 import random
@@ -192,7 +216,7 @@ def tie_break_key(sample):
     return (random.random(), sample.completion)
 ```
 
-Teraz uruchom dokładnie to samo polecenie 5 razy:
+Wykonaj identyczne polecenie pięć razy:
 
 ```bash
 for i in 1 2 3 4 5; do
@@ -204,9 +228,9 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-### Reflect (forensics): udowodnij istnienie wariancji używając artefaktów uruchomień
+### Faza Reflect: Wykazanie wariancji przez analizę artefaktów
 
-Oblicz hash każdego `results.jsonl`. Jeśli selection jest niedeterministyczne, hashe będą się różnić.
+Oblicz hash każdego `results.jsonl`. Jeśli selection jest niedeterministyczne, hashe będą się różnić:
 
 ```bash
 for i in 1 2 3 4 5; do
@@ -214,117 +238,131 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Zmieniaj tylko `course/assignments/selection_policy.py` i jego testy.
+## Zadania Capstone
 
-### Repair + Lock
+**Dozwolone modyfikacje:** Tylko `course/assignments/selection_policy.py` i powiązane testy.
 
-1. Usuń losowość. Zaimplementuj deterministyczny tie-break, który preferuje:
+### Repair and Lock
 
-   * wyższe `sum_logprob` (jeśli obecne)
-   * następnie krótsze uzupełnienie
-   * następnie leksykograficzny tekst
+1. Usuń losowość. Zaimplementuj deterministyczny tie-breaking z następującym priorytetem:
+
+   * Wyższy `sum_logprob` (jeśli obecny)
+   * Krótsza długość uzupełnienia
+   * Porządek leksykograficzny tekstu
 
 Przykładowy deterministyczny klucz:
 
 ```python
 def tie_break_key(sample):
     lp = sample.sum_logprob
-    lp_key = 0.0 if lp is None else -float(lp)   # ujemne, żeby "wyższy logprob" sortował się pierwszy
+    lp_key = 0.0 if lp is None else -float(lp)   # ujemny, aby sortować wyższy logprob jako pierwszy
     return (lp_key, len(sample.completion), sample.completion)
 ```
 
-2. Dodaj `tests/test_selection_policy.py`:
+2. Utwórz `tests/test_selection_policy.py`:
 
-   * test determinizmu: powtarzane wywołania wybierają ten sam indeks
-   * test tie-break: dwie próbki o równej nagrodzie wybierają zamierzoną
+   * Test determinizmu: powtarzane wywołania wybierają identyczny indeks
+   * Test tie-break: mając dwie próbki o równej nagrodzie, wybierana jest zamierzona
 
-Uruchom:
+Wykonaj weryfikację:
 
 ```bash
 pytest -q
 python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
 ```
 
-## 4) Lista kontrolna „Passed"
+---
 
-* Dlaczego Loop B może poprawić wyjścia bez zmiany rozkładu policy?
-* Jakie dokładnie „pokrętło" przekręciłeś podczas sabotażu i jak to udowodniłeś używając hashy/artefaktów?
-* Dlaczego kod selection musi być deterministyczny w produkcji?
+## Kryteria ukończenia
+
+* Dlaczego Loop B może poprawiać wyjścia bez modyfikacji rozkładu policy?
+* Jaka konkretna zmienna została zmodyfikowana podczas sabotażu i jak to zostało zademonstrowane przez analizę artefaktów?
+* Dlaczego kod selection musi być deterministyczny w systemach produkcyjnych?
 
 ---
 
-# Level 1: REINFORCE pod mikroskopem (Build → Over-optimize → Diagnose) — Loop C (toy)
+# Level 1: Analiza algorytmu REINFORCE — Loop C (uproszczona domena)
 
-## 1) Zmiana nastawienia
+## Podstawa koncepcyjna
 
-**Błędna intuicja:** „RL to supervised learning z dodatkowymi krokami."
-**Poprawny model mentalny:** „RL popycha prawdopodobieństwa. Kierunek aktualizacji jest kontrolowany przez advantage = reward − baseline. Baseline redukują wariancję, nie cel."
+**Błędna intuicja:** „RL to supervised learning z dodatkową złożonością."
 
-## 2) Działania studenta (dokładne CLI)
+**Poprawny model mentalny:** „RL dostosowuje rozkłady prawdopodobieństwa. Kierunek aktualizacji jest kontrolowany przez advantage = reward − baseline. Baseline redukują wariancję bez zmiany celu optymalizacji."
 
-### Build (działający samochód): stabilne uczenie z baseline
+---
+
+## Kroki proceduralne
+
+### Faza Build: Stabilne uczenie z baseline
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
-### Sabotage (zepsuj): nadmierna optymalizacja i/lub odwrócone uczenie
+### Faza Sabotage: Nadmierna optymalizacja i odwrócone uczenie
 
-Uruchom dwa eksperymenty sabotażowe:
+Wykonaj dwa eksperymenty sabotażowe:
 
-**(A) Zbyt agresywny learning rate**
+**(A) Nadmierny learning rate**
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
 ```
 
-**(B) Ujemny learning rate (ucz się w złym kierunku)**
+**(B) Ujemny learning rate (odwrócony kierunek aktualizacji)**
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
-### Reflect (forensics): obserwuj mechanizm krok po kroku
+### Faza Reflect: Obserwacja mechanizmu krok po kroku
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
 python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Możesz tworzyć pliki pod `notes/` i `course/assignments/`. Nie modyfikuj `course/bandit_train.py`.
+## Zadania Capstone
 
-Stwórz `notes/reinforce_forensics.md`:
+**Dozwolone modyfikacje:** Pliki pod `notes/` i `course/assignments/`. Modyfikacja `course/bandit_train.py` nie jest dozwolona.
 
-* wybierz 10 kolejnych wpisów z wyjścia `--slow` (copy/paste)
-* dla każdego wpisu zanotuj:
+Utwórz `notes/reinforce_forensics.md`:
 
-  * action, reward, baseline, znak advantage
-  * co musi się stać z prawdopodobieństwem tej akcji jako następne
+* Wybierz 10 kolejnych wpisów z wyjścia `--slow`
+* Dla każdego wpisu zanotuj:
 
-Następnie napisz 1 akapit wyjaśniający, dlaczego uruchomienia sabotażowe zachowują się inaczej.
+  * Akcja, nagroda, baseline, znak advantage
+  * Wymagana zmiana prawdopodobieństwa tej akcji
 
-## 4) Lista kontrolna „Passed"
-
-* Jeśli advantage jest ujemny, co dzieje się z prawdopodobieństwem spróbkowanej akcji?
-* Dlaczego baseline redukuje szum, ale nie zmienia „kierunku" uczenia?
-* Czego ujemny learning rate nauczył cię o „popychaniu prawdopodobieństw"?
+Zakończ jednym akapitem wyjaśniającym różnice behawioralne zaobserwowane w przebiegach sabotażowych.
 
 ---
 
-# Level 2: Credit Assignment + granica Token/Tekst (Build → Remove Credit → Observe Failure → Fix)
+## Kryteria ukończenia
 
-## 1) Zmiana nastawienia
+* Jeśli advantage jest ujemny, co dzieje się z prawdopodobieństwem spróbkowanej akcji?
+* Dlaczego baseline redukuje szum bez zmiany kierunku uczenia?
+* Co ujemny learning rate zademonstrował odnośnie dostosowania prawdopodobieństwa?
 
-**Błędna intuicja:** „Tylko ostatni token/akcja ma znaczenie, bo nagroda jest na końcu."
-**Poprawny model mentalny:** „W sekwencyjnym generowaniu wczesne decyzje kształtują późniejsze stany. Końcowa nagroda staje się sygnałem treningowym stosowanym wzdłuż spróbkowanej trajektorii (credit assignment). Również: policy działa na tokenach; weryfikator działa na tekście."
+---
 
-## 2) Działania studenta (dokładne CLI)
+# Level 2: Credit Assignment i granica Token-Tekst
 
-### Build (działający samochód): obserwuj granicę tokenów
+## Podstawa koncepcyjna
+
+**Błędna intuicja:** „Tylko końcowy token ma znaczenie, ponieważ nagroda jest przypisywana na końcu sekwencji."
+
+**Poprawny model mentalny:** „W generowaniu sekwencyjnym wczesne decyzje ograniczają późniejsze stany. Końcowa nagroda staje się sygnałem treningowym propagowanym wzdłuż spróbkowanej trajektorii (credit assignment). Dodatkowo: policy operuje w przestrzeni tokenów; weryfikacja operuje w przestrzeni tekstu."
+
+---
+
+## Kroki proceduralne
+
+### Faza Build: Obserwacja granicy tokenów
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -333,88 +371,93 @@ python -m course.token_inspect "Final:\n323"
 python -m course.token_inspect "Final: 0323"
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Stwórz `course/assignments/two_step_mdp_demo.py` i notatki. Nie zmieniaj scorera.
+## Zadania Capstone
 
-### Build: zaimplementuj poprawny dwukrokowy REINFORCE
+**Dozwolone modyfikacje:** Utwórz `course/assignments/two_step_mdp_demo.py` i powiązane notatki. Modyfikacja scorera nie jest dozwolona.
 
-Stwórz `course/assignments/two_step_mdp_demo.py`:
+### Build: Poprawna implementacja dwukrokowego REINFORCE
 
-* krok 1 wybierz A/B
-* krok 2 wybierz X/Y uwarunkowane krokiem 1
-* nagroda tylko na końcu
-* aktualizuj **obie** policy kroków używając tej samej końcowej nagrody (z baseline opcjonalnie)
+Utwórz `course/assignments/two_step_mdp_demo.py`:
 
-Uruchom:
+* Krok 1: Wybierz A lub B
+* Krok 2: Wybierz X lub Y uwarunkowane wynikiem kroku 1
+* Nagroda przypisywana tylko przy zakończeniu
+* Aktualizuj **obie** policy kroków używając końcowej nagrody (baseline opcjonalnie)
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_build_two_step
 ```
 
-### Sabotage: usuń credit assignment dla kroku 1
+### Sabotage: Usunięcie credit assignment dla kroku 1
 
-Edytuj swój skrypt tak, aby **tylko krok 2 był aktualizowany** (krok 1 pozostaje losowy). Uruchom ponownie:
+Zmodyfikuj skrypt tak, aby **tylko krok 2 otrzymywał aktualizacje** (krok 1 pozostaje jednostajnie losowy):
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_sabotage_no_credit_step1
 ```
 
-### Reflect + Fix: przywróć aktualizacje dla kroku 1 i uruchom ponownie
+### Repair: Przywrócenie aktualizacji kroku 1
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
 ```
 
-Napisz `notes/credit_assignment.md`:
+Utwórz `notes/credit_assignment.md`:
 
-* wyjaśnij co zawiodło w sabotażu i dlaczego
-* dołącz jeden diagram: tokeny → detokenizacja → tekst → parsowanie → nagroda
-
-## 4) Lista kontrolna „Passed"
-
-* Dlaczego krok 1 może mieć znaczenie, nawet gdy nagroda przychodzi na końcu?
-* Co to jest macro-action vs micro-action w kontekście LLM?
-* Dlaczego parsowanie/formatowanie jest częścią granicy środowiska?
+* Wyjaśnij, co zawiodło podczas sabotażu i przyczynę leżącą u podstaw
+* Dołącz diagram: tokeny → detokenizacja → tekst → parsowanie → nagroda
 
 ---
 
-# Level 3: KL jako smycz (Build → Drop the Leash → See Drift Preference)
+## Kryteria ukończenia
 
-## 1) Zmiana nastawienia
+* Dlaczego krok 1 może wpływać na wyniki, nawet gdy nagroda jest przypisywana przy zakończeniu?
+* Co odróżnia macro-actions od micro-actions w kontekście LLM?
+* Dlaczego parsowanie/formatowanie jest uważane za część granicy środowiska?
 
-**Błędna intuicja:** „KL to dekoracyjna matematyka."
-**Poprawny model mentalny:** „KL to praktyczna smycz: poprawiaj nagrodę, ale karz za odchodzenie zbyt daleko od rozkładu referencyjnego."
+---
 
-## 2) Działania studenta (dokładne CLI)
+# Level 3: KL Divergence jako ograniczenie regularyzacyjne
 
-### Build (działający samochód): uruchom demo kompromisu KL
+## Podstawa koncepcyjna
+
+**Błędna intuicja:** „KL divergence jest czysto matematyczną abstrakcją."
+
+**Poprawny model mentalny:** „KL divergence funkcjonuje jako praktyczne ograniczenie: maksymalizuj nagrodę, jednocześnie karząc nadmierną dywergencję od rozkładu referencyjnego."
+
+---
+
+## Kroki proceduralne
+
+### Faza Build: Wykonanie demonstracji kompromisu KL
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Stwórz mały skrypt assignment + notatki. Nie modyfikuj głównego kodu demo.
+## Zadania Capstone
 
-### Build: zaimplementuj selection z regularyzacją KL na małej syntetycznej tabeli
+**Dozwolone modyfikacje:** Utwórz skrypty assignment i notatki. Modyfikacja głównego kodu demonstracji nie jest dozwolona.
 
-Stwórz `course/assignments/kl_regularized_choice.py`:
+### Build: Selection z regularyzacją KL na danych syntetycznych
 
-* zahardcoduj 6 „kandydatów", każdy z `(reward, kl)`
-* zaimplementuj regułę wyboru: maksymalizuj `reward - beta * kl`
-* wypisz wybranego kandydata dla `beta = 0.1` i `beta = 1.0`
+Utwórz `course/assignments/kl_regularized_choice.py`:
 
-Uruchom:
+* Zdefiniuj 6 opcji kandydatów, każda z wartościami `(reward, kl)`
+* Zaimplementuj regułę selekcji: maksymalizuj `reward - beta * kl`
+* Wypisz wybranego kandydata dla `beta = 0.1` i `beta = 1.0`
 
 ```bash
 python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 ```
 
-### Sabotage: usuń smycz (beta = 0)
+### Sabotage: Usunięcie ograniczenia regularyzacyjnego (beta = 0)
 
-Zmodyfikuj skrypt tak, aby beta = 0 i uruchom ponownie:
+Zmodyfikuj skrypt, aby ustawić beta = 0:
 
 ```bash
 python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
@@ -422,29 +465,34 @@ python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 
 ### Reflect
 
-Stwórz `notes/kl_tradeoff.md`:
+Utwórz `notes/kl_tradeoff.md`:
 
-* wyjaśnij dlaczego „beta = 0" to atrakcyjna katastrofa
-* połącz to z tym, dlaczego nieograniczona optymalizacja ma tendencję do preferowania ekstremalnych rozwiązań o wysokim dryfcie
-
-## 4) Lista kontrolna „Passed"
-
-* Co KL ogranicza prostym językiem?
-* Dlaczego usunięcie preferencji KL może prowadzić do zachowań reward-hack-y (nawet jeśli reward rośnie)?
-* Co jest „referencją" w tym modelu mentalnym?
+* Wyjaśnij, dlaczego beta = 0 reprezentuje atrakcyjną, ale problematyczną konfigurację
+* Połącz to z tym, dlaczego nieograniczona optymalizacja ma tendencję do rozwiązań ekstremalnych, o wysokiej dywergencji
 
 ---
 
-# Level 4: Reward = Spec (Build Golden Gates → Loosen Rule → Catch False Positives → Fix + Version)
+## Kryteria ukończenia
 
-## 1) Zmiana nastawienia
+* Co KL divergence ogranicza w terminach operacyjnych?
+* Dlaczego usunięcie preferencji KL może prowadzić do zachowania eksploatującego nagrodę, nawet gdy mierzona nagroda rośnie?
+* Co stanowi „referencję" w tym frameworku regularyzacyjnym?
 
-**Błędna intuicja:** „Scorer to tylko asercja."
-**Poprawny model mentalny:** „Scorer definiuje zadanie i musi być traktowany jak produkcyjne oprogramowanie pomiarowe."
+---
 
-## 2) Działania studenta (dokładne CLI)
+# Level 4: Specyfikacja nagrody jako kod produkcyjny
 
-### Build (działający samochód): zwaliduj scorer przeciwko golden
+## Podstawa koncepcyjna
+
+**Błędna intuicja:** „Scorer jest jedynie instrukcją asercji."
+
+**Poprawny model mentalny:** „Scorer definiuje specyfikację zadania i musi być traktowany jako produkcyjne oprogramowanie pomiarowe."
+
+---
+
+## Kroki proceduralne
+
+### Faza Build: Walidacja scorera względem golden test cases
 
 ```bash
 python -m course.validate_scorer \
@@ -456,27 +504,29 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Dozwolone zmiany: `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
-(Nie dotykaj kodu selection ani learning w tym poziomie.)
+## Zadania Capstone
 
-### Build: sondy black-box (przed czytaniem kodu)
+**Dozwolone modyfikacje:** `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
+Modyfikacje kodu selection i learning nie są dozwolone na tym poziomie.
 
-Stwórz `notes/reward_spec_blackbox.md`:
+### Build: Sondowanie specyfikacji Black-Box
 
-* napisz reguły formatu, które twoim zdaniem istnieją
-* dołącz 8 ciągów sond i przewidywane outcome codes
+Utwórz `notes/reward_spec_blackbox.md`:
 
-### Sabotage: poluzuj jedną regułę w scorerze
+* Udokumentuj reguły formatu, które twoim zdaniem istnieją na podstawie zaobserwowanego zachowania
+* Dołącz 8 ciągów sond z przewidywanymi outcome codes
+
+### Sabotage: Poluzowanie jednej reguły specyfikacji
 
 Wybierz jedną ścisłą regułę w `course/core/scoring.py` i celowo ją osłab (przykłady):
 
-* pozwól na dodatkowe whitespace po `Final:`
-* pozwól na wiodące zera
-* pozwól na wieloliniowe wyjścia
+* Pozwól na dodatkowe whitespace po `Final:`
+* Pozwól na wiodące zera
+* Pozwól na wieloliniowe wyjścia
 
-Teraz uruchom ponownie sprawdzenia golden i obserwuj awarie:
+Wykonaj walidację golden i obserwuj awarie:
 
 ```bash
 python -m course.validate_scorer \
@@ -484,41 +534,46 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-### Repair + Lock: przywróć ścisłość, następnie rozszerz testy
+### Repair and Lock: Przywrócenie ścisłości i rozszerzenie pokrycia testami
 
-1. Przywróć poprawne zachowanie.
-2. Dodaj `tests/test_reward_regressions.py` z **co najmniej 6** przypadkami:
+1. Przywróć poprawne zachowanie specyfikacji.
+2. Utwórz `tests/test_reward_regressions.py` z **co najmniej 6** przypadkami testowymi:
 
-   * 2 przypadki „znane poprawne"
-   * 4 przypadki exploit/edge (sztuczki formatowania)
-3. Dodaj `data/golden/golden_exploits_extra.jsonl` z **co najmniej 5** nowymi przypadkami exploit.
-4. Jeśli zachowanie reward zmieniło się względem baseline, podbij `SCORER_VERSION`.
+   * 2 zweryfikowane poprawne przypadki
+   * 4 przypadki exploit/edge (manipulacja formatem)
+3. Utwórz `data/golden/golden_exploits_extra.jsonl` z **co najmniej 5** dodatkowymi przypadkami exploit.
+4. Jeśli zachowanie reward różni się od linii bazowej, inkrementuj `SCORER_VERSION`.
 
-Zwaliduj:
+Wykonaj weryfikację:
 
 ```bash
 pytest -q
 python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
 ```
 
-## 4) Lista kontrolna „Passed"
+---
 
-* Co to jest false positive vs false negative w tym weryfikatorze?
-* Dlaczego musisz wersjonować scorer przy zmianie zachowania i przestać porównywać stare numery uruchomień?
-* Dlaczego „bardziej łagodne parsowanie" to zazwyczaj pułapka?
+## Kryteria ukończenia
+
+* Co stanowi false positive versus false negative w tym kontekście weryfikacji?
+* Dlaczego scorer musi być wersjonowany przy zmianie zachowania, unieważniając porównania z wcześniejszymi metrykami uruchomień?
+* Dlaczego „bardziej łagodne parsowanie" jest zazwyczaj kontrproduktywne?
 
 ---
 
-# Level 5: Goodhart Dungeon (Build a Naive Verifier → Hack It → Patch the Class)
+# Level 5: Analiza eksploatacji nagrody
 
-## 1) Zmiana nastawienia
+## Podstawa koncepcyjna
 
-**Błędna intuicja:** „Reward hacking oznacza, że optymalizator jest zły."
-**Poprawny model mentalny:** „Optymalizatory wykorzystują proxy. Jeśli specyfikacja ma luki, optymalizacja je znajdzie. Napraw mechanizmy, następnie zablokuj testami."
+**Błędna intuicja:** „Reward hacking wskazuje na złośliwy optymalizator."
 
-## 2) Działania studenta (dokładne CLI)
+**Poprawny model mentalny:** „Optymalizatory eksploatują miary proxy. Jeśli specyfikacja zawiera luki, optymalizacja je odkryje. Rozwiązaniem jest łatanie klas mechanizmów i blokowanie ich testami."
 
-### Build baseline context (opcjonalne, ale ugruntowujące)
+---
+
+## Kroki proceduralne
+
+### Faza Build: Ustanowienie kontekstu bazowego (opcjonalne)
 
 ```bash
 python -m course.eval \
@@ -529,52 +584,59 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-**Budżet pokręteł:** Dodaj nowe pliki assignment + notatki + testy. Unikaj edycji prawdziwego scorera, chyba że traktujesz to jako zmianę instrumentu.
+## Zadania Capstone
 
-### Build: napisz celowo naiwne demo weryfikatora
+**Dozwolone modyfikacje:** Nowe pliki assignment, notatki i testy. Modyfikacje produkcyjnego scorera powinny być traktowane jako zmiany instrumentu wymagające inkrementacji wersji.
 
-Stwórz `course/assignments/hackable_scorer_demo.py`:
+### Build: Implementacja celowo naiwnego weryfikatora
 
-* reward = 1 jeśli oczekiwana liczba całkowita pojawia się gdziekolwiek w uzupełnieniu (naiwny styl substring/regex)
-* pokaż, że „działa" na uczciwych uzupełnieniach
+Utwórz `course/assignments/hackable_scorer_demo.py`:
 
-### Sabotage: wygeneruj 5 hacków
+* Przypisz reward = 1, jeśli oczekiwana liczba całkowita pojawia się gdziekolwiek w uzupełnieniu (naiwne podejście substring/regex)
+* Zademonstruj, że produkuje poprawne wyniki na uczciwych uzupełnieniach
 
-Stwórz 5 oszukujących uzupełnień, które uzyskują wynik 1 bez bycia faktycznie poprawną odpowiedzią (np. number spray).
+### Sabotage: Wygenerowanie 5 exploitów
 
-### Repair: załataj klasę exploitów
+Utwórz 5 uzupełnień, które osiągają reward = 1 bez stanowienia poprawnych rozwiązań (np. wyliczanie liczb).
 
-Zmodyfikuj logikę demo weryfikatora, aby zamknąć klasę exploitów, nie tylko jeden ciąg.
+### Repair: Załatanie klasy exploitów
 
-Napisz `notes/red_team_report.md`:
+Zmodyfikuj demonstracyjny weryfikator, aby zamknąć klasę exploitów (nie tylko konkretne ciągi exploit).
 
-* 5 ciągów exploit
-* dlaczego zadziałały
-* strategia łatki
-* jakie testy by to permanentnie zablokowały
+Utwórz `notes/red_team_report.md`:
 
-## 4) Lista kontrolna „Passed"
-
-* Podaj konkretny przykład „proxy w górę, prawdziwy cel w dół."
-* Co oznacza „załataj klasę, nie ciąg"?
-* Dlaczego to ma znaczenie dla Loop C później?
+* Udokumentuj 5 ciągów exploit
+* Wyjaśnij, dlaczego odniosły sukces
+* Opisz strategię łatki
+* Określ, jakie testy zapobiegłyby regresji
 
 ---
 
-# Level 6: Komitet promocyjny (trzy kontrolowane pułapki) — Integruj A/B/C
+## Kryteria ukończenia
 
-## 1) Zmiana nastawienia
+* Podaj konkretny przykład „metryka proxy rośnie, prawdziwy cel maleje."
+* Co oznacza „załataj klasę, nie instancję"?
+* Dlaczego ta analiza ma znaczenie dla późniejszej pracy Loop C?
 
-**Błędna intuicja:** „Wyższa liczba = lepiej."
-**Poprawny model mentalny:** „Promowalna poprawa musi być porównywalna pod Locked Room i przypisywalna do dokładnie jednego pokrętła."
+---
 
-## 2) Działania studenta (dokładne CLI)
+# Level 6: Komitet promocyjny (trzy kontrolowane pułapki eksperymentalne)
 
-### Pułapka 1 (Sabotage): nieważna promocja przez zmianę instrumentu (przerwanie porównywalności Loop A)
+## Podstawa koncepcyjna
 
-Użyj swojego wcześniejszego uruchomienia ze zmanipulowanym datasetem (lub zrób świeże), następnie przepuść przez bramkę:
+**Błędna intuicja:** „Wyższa wartość metryki równa się poprawie."
+
+**Poprawny model mentalny:** „Promowalna poprawa musi spełniać porównywalność Locked Room i być przypisywalna do dokładnie jednej kontrolowanej zmiennej."
+
+---
+
+## Kroki proceduralne
+
+### Pułapka 1 (Sabotage): Nieważna promocja przez zmianę instrumentu
+
+Użyj wcześniej zmanipulowanego przebiegu z datasetem (lub utwórz nowy), następnie wywołaj bramkę:
 
 ```bash
 python -m course.gate \
@@ -583,7 +645,7 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-### Pułapka 2: poprawa selection bez learning (Loop B)
+### Pułapka 2: Poprawa selection bez learning
 
 ```bash
 python -m course.selection_demo \
@@ -599,32 +661,36 @@ python -m course.selection_demo \
   --outdir runs/l6_trap_sel_n4
 ```
 
-### Pułapka 3: learning zmienia zachowanie (mechanizm Loop C)
+### Pułapka 3: Learning modyfikuje zachowanie
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
 ```
 
-## 3) Zadanie Capstone (zestaw umiejętności)
+---
 
-Napisz `notes/promotion_memo.md` (≤ 1 strona):
+## Zadania Capstone
 
-* Sekcja dla każdej pułapki:
+Utwórz `notes/promotion_memo.md` (maksymalnie 1 strona):
 
-  * pętla (A/B/C)
-  * przekręcone pokrętło
-  * czy porównanie jest ważne
-  * dowody (zacytuj odpowiednią część `manifest.json` / wersję scorera / zmianę parametru)
-* Końcowy akapit: co byś PROMOWAŁ vs ODRZUCIŁ dziś i dlaczego
+* Dla każdej pułapki udokumentuj:
 
-## 4) Lista kontrolna „Passed"
+  * Klasyfikacja loop (A/B/C)
+  * Zmodyfikowana zmienna
+  * Ocena poprawności porównania
+  * Dowody (cytat z `manifest.json` / wersja scorera / modyfikacja parametru)
+* Akapit końcowy: co byś PROMOWAŁ versus ODRZUCIŁ dziś, z uzasadnieniem
 
-* Jeśli pass_rate jest wyższy, jak udowodnisz, że to nie jest naruszenie Locked Room?
-* Jak rozróżniasz poprawę selection od poprawy learning używając tylko artefaktów?
+---
+
+## Kryteria ukończenia
+
+* Jeśli pass_rate wzrosło, jak demonstrujesz, że nie jest to naruszenie Locked Room?
+* Jak odróżniasz poprawę selection od poprawy learning używając wyłącznie artefaktów?
 * Dlaczego Loop C nieuchronnie tworzy nowe tryby awarii, których zamrożone rollouts nie mogą w pełni ujawnić?
 
 ---
 
-## Jeśli poprawnie ukończysz tę ścieżkę
+## Podsumowanie ukończenia ścieżki
 
-Będziesz miał podstawową umiejętność, do której ten kurs dąży: zdolność do uruchamiania i interpretowania eksperymentów RL-for-LLMs bez mylenia **pomiaru**, **selection** i **learning**, oraz bez ufania nieważnym porównaniom.
+Pomyślne ukończenie tej ścieżki ustanawia podstawową kompetencję, do której ten kurs dąży: zdolność do wykonywania i interpretowania eksperymentów RL-for-LLMs bez mylenia **pomiaru**, **selection** i **learning**, oraz bez akceptowania metodologicznie nieważnych porównań.

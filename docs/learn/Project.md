@@ -1,83 +1,100 @@
 # RL Foundations for LLMs — Mastery Track Project Roadmap
 
-**Project:** *Verifier-Driven Math QA — Build a “working car,” then sabotage it, then harden it.*
+---
 
-This track is designed to “force” understanding by making you repeatedly do the same cycle:
+## Project Overview
 
-1. **Build (Working Car):** get a clean, deterministic baseline that you fully own.
-2. **Sabotage (Break It):** make one small, explicit change that breaks a core principle.
-3. **Reflect (Forensics):** observe the break using artifacts (`manifest.json`, `summary.json`, `results.jsonl`) rather than vibes.
-4. **Repair + Lock:** fix the *mechanism* and encode it as tests + gates so it can’t regress.
+**Project Title:** Verifier-Driven Math QA — Construction, Deliberate Disruption, and Systematic Hardening
 
-**Do not skip the Sabotage steps.** They’re the entire point.
+This track is designed to enforce understanding through repeated application of a structured experimental cycle:
+
+1. **Build (Baseline Establishment):** Establish a clean, deterministic baseline over which the student exercises complete control.
+2. **Sabotage (Controlled Perturbation):** Introduce precisely one explicit modification that violates a core principle.
+3. **Reflect (Forensic Analysis):** Observe the resulting failure through examination of artifacts (`manifest.json`, `summary.json`, `results.jsonl`) rather than through intuitive assessment.
+4. **Repair and Lock (Mechanism Correction):** Correct the underlying mechanism and encode the fix as tests and gates to prevent regression.
+
+The Sabotage steps constitute the essential pedagogical component of this track and must not be omitted.
 
 ---
 
-## Core rules (memorize these early)
+## Foundational Rules
 
-### The three loops (use this terminology)
+These principles should be internalized before commencing practical work.
 
-* **Loop A (Eval):** measurement only (frozen inputs, deterministic scorer).
-* **Loop B (Selection):** choose best-of-N (behavior improves; the underlying policy distribution does not).
-* **Loop C (Learning):** update a policy (probabilities shift → distribution shifts).
+### The Three Operational Loops
 
-### Locked Room Rule (valid comparisons)
+This terminology should be applied consistently throughout all documentation and discussion:
 
-Before you compare two run numbers, you must verify these are identical:
+* **Loop A (Evaluation):** Measurement operations exclusively (frozen inputs, deterministic scorer).
+* **Loop B (Selection):** Best-of-N selection (observable behavior improves; the underlying policy distribution remains unchanged).
+* **Loop C (Learning):** Policy parameter updates (probability distributions shift → generative behavior shifts).
 
-* dataset split (same file fingerprint in `manifest.json`)
-* prompt text (if applicable)
-* scorer **name + version**
-* sampling settings (if applicable)
+### The Locked Room Principle (Valid Experimental Comparisons)
 
-If any differ, you changed the environment/instrument. That comparison is invalid.
+Before comparing metrics between two experimental runs, the following conditions must be verified as identical:
 
-### Reward = Spec (treat `score()` like production code)
+* Dataset split (identical file fingerprint recorded in `manifest.json`)
+* Prompt text (if applicable to the experimental design)
+* Scorer **name and version**
+* Sampling configuration (if stochastic sampling is employed)
 
-Your scorer is a measurement instrument. It must be:
-**deterministic**, **total (never crashes)**, **explainable**, **fast**, **versioned**.
+If any of these conditions differ between runs, the experimental environment or measurement instrument has been altered. Such comparisons are methodologically invalid.
+
+### Reward Specification as Production Code
+
+The scorer functions as a measurement instrument and must therefore exhibit the following properties:
+**deterministic**, **total (never terminates abnormally)**, **explainable**, **computationally efficient**, **version-controlled**.
+
+The `score()` function should be treated with the same rigor as production software.
 
 ---
 
-## Workflow discipline (strongly recommended)
+## Workflow Discipline
 
-Create a branch and make small commits so you can prove what changed.
+The following practices are strongly recommended:
+
+Create a dedicated branch and commit incrementally to maintain a verifiable record of modifications.
 
 ```bash
 git checkout -b mastery-track
 pytest -q
 ```
 
-For every level, do:
+For each level, execute the following commit sequence:
 
-* Commit the **Build** state.
-* Commit the **Sabotage** change (even though it’s “wrong”).
-* Commit the **Fix**.
+* Commit the **Build** state (baseline establishment).
+* Commit the **Sabotage** modification (even though it introduces deliberate failure).
+* Commit the **Repair** (fix and preventive measures).
 
 ---
 
-## Run note template (put this in every `runs/<name>/README.md`)
+## Run Documentation Template
+
+The following template should be completed for each experimental run in `runs/<name>/README.md`:
 
 * **Loop:** A / B / C
-* **Knob turned (pick ONE):** measurement instrument / selection compute / policy / environment
-* **Locked Room evidence:** (dataset fingerprints + scorer version; quote from manifest)
-* **What I expected:**
-* **What happened (numbers):**
-* **Two concrete examples:** (id + outcome code + what you saw)
-* **Repair plan:** (one sentence)
+* **Variable Modified (select exactly one):** measurement instrument / selection compute / policy / environment
+* **Locked Room Evidence:** (dataset fingerprints + scorer version; direct quotation from manifest)
+* **Expected Outcome:**
+* **Observed Outcome (quantitative):**
+* **Two Concrete Examples:** (example id + outcome code + observed behavior)
+* **Repair Plan:** (single sentence)
 
 ---
 
-# Level 0: Measurement Hygiene (Build → Tamper → Catch It) — Loop A
+# Level 0: Measurement Hygiene — Loop A
 
-## 1) The Mindset Shift
+## Conceptual Foundation
 
-**Wrong intuition:** “The model is dumb.”
-**Correct mental model:** “Loop A is a measurement instrument check. If the number changed, either (a) the policy changed, or (b) the measurement conditions changed. My job is to prove which.”
+**Incorrect intuition:** "The model is performing poorly."
 
-## 2) Student actions (exact CLI)
+**Correct mental model:** "Loop A constitutes a measurement instrument verification. If the measured value changed, either (a) the policy changed, or (b) the measurement conditions changed. The objective is to determine which."
 
-### Build (working car): run a clean Loop A eval
+---
+
+## Procedural Steps
+
+### Build Phase: Execute a Clean Loop A Evaluation
 
 ```bash
 python -m course.eval \
@@ -88,11 +105,11 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
-### Sabotage (break it): tamper the dataset (Locked Room violation)
+### Sabotage Phase: Introduce Dataset Tampering (Locked Room Violation)
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
-# Manually edit exactly ONE record’s expected_answer in the tampered file.
+# Manually modify exactly ONE record's expected_answer in the tampered file.
 
 python -m course.eval \
   --dataset data/datasets/math_dev_TAMPERED.jsonl \
@@ -100,7 +117,7 @@ python -m course.eval \
   --outdir runs/l0_sabotage_eval_tampered
 ```
 
-### Reflect (forensics): force the gate to judge comparability
+### Reflect Phase: Invoke the Gate to Assess Comparability
 
 ```bash
 python -m course.gate \
@@ -109,21 +126,23 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-You should see **REJECT** with reasons that point to Locked Room incompatibility.
+The expected output is **REJECT** with diagnostic information indicating Locked Room incompatibility.
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Allowed changes: `notes/`, `course/assignments/`, `tests/`, new files under `data/`.
-Do not change scorer code yet.
+## Capstone Tasks
 
-### Task A — Write the mental model
+**Permitted Modifications:** Files under `notes/`, `course/assignments/`, `tests/`, and new files under `data/`.
+Scorer code modifications are not permitted at this level.
+
+### Task A — Mental Model Documentation
 
 Create `notes/mental_map_v1.md` (1–2 pages):
 
-* define: reward, metric, objective, loss, policy, environment
-* draw Loop A/B/C and label the knob for each
+* Define the following terms: reward, metric, objective, loss, policy, environment
+* Diagram Loop A/B/C with the primary variable identified for each
 
-### Task B — Debugging Kata (autograded)
+### Task B — Debugging Kata (Automated Assessment)
 
 Create `course/assignments/kata_01.py`:
 
@@ -138,36 +157,41 @@ def classify(outcome_code: str) -> str:
     """
 ```
 
-Create `tests/test_kata_01.py` with a small answer key. Minimum required mapping:
+Create `tests/test_kata_01.py` with appropriate test cases. Minimum required mappings:
 
 * `"wrong_answer"` → `model_math`
-* any parse-format code (e.g. `"missing_prefix"`, `"extra_whitespace"`, `"not_single_line"`, `"leading_zeros"`) → `model_format`
+* Any parse-format code (e.g., `"missing_prefix"`, `"extra_whitespace"`, `"not_single_line"`, `"leading_zeros"`) → `model_format`
 * `"invalid_example"` → `data_invalid`
 
-Run:
+Execute verification:
 
 ```bash
 pytest -q
 ```
 
-## 4) The “Passed” Checklist
+---
 
-* If two eval runs differ, can you name the only valid causes and point to evidence in `manifest.json`?
-* Can you explain the difference between a **format failure** and a **math failure** using outcome codes?
-* Can you explain why “tampered dataset improved pass_rate” is not an improvement?
+## Completion Criteria
+
+* Given two evaluation runs with differing results, can you enumerate the valid causes and provide evidence from `manifest.json`?
+* Can you articulate the distinction between a **format failure** and a **mathematical failure** using outcome codes?
+* Can you explain why "the tampered dataset improved pass_rate" does not constitute a valid improvement?
 
 ---
 
-# Level 0.5: Selection Is Not Learning (Build → Randomize → Measure Variance → Fix) — Loop B
+# Level 0.5: Selection Without Learning — Loop B
 
-## 1) The Mindset Shift
+## Conceptual Foundation
 
-**Wrong intuition:** “pass@N improved, so the model learned.”
-**Correct mental model:** “Loop B changes the decision rule over samples (selection compute). The underlying policy distribution is unchanged.”
+**Incorrect intuition:** "pass@N improved, therefore the model learned."
 
-## 2) Student actions (exact CLI)
+**Correct mental model:** "Loop B modifies the decision rule over samples (selection compute). The underlying policy distribution remains unchanged."
 
-### Build (working car): run selection demo on the provided pack
+---
+
+## Procedural Steps
+
+### Build Phase: Execute Selection Demo on Provided Data
 
 ```bash
 python -m course.selection_demo \
@@ -179,11 +203,11 @@ python -m course.selection_demo \
 python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
-### Sabotage (break it): inject nondeterminism into tie-breaking
+### Sabotage Phase: Introduce Nondeterminism into Tie-Breaking
 
 Edit `course/assignments/selection_policy.py`.
 
-Change `tie_break_key` to something explicitly random (on purpose):
+Modify `tie_break_key` to incorporate explicit randomness:
 
 ```python
 import random
@@ -192,7 +216,7 @@ def tie_break_key(sample):
     return (random.random(), sample.completion)
 ```
 
-Now run the exact same command 5 times:
+Execute the identical command five times:
 
 ```bash
 for i in 1 2 3 4 5; do
@@ -204,9 +228,9 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-### Reflect (forensics): prove variance exists using run artifacts
+### Reflect Phase: Demonstrate Variance Through Artifact Analysis
 
-Compute a hash of each `results.jsonl`. If selection is nondeterministic, hashes will differ.
+Compute a hash of each `results.jsonl`. If selection is nondeterministic, hashes will differ:
 
 ```bash
 for i in 1 2 3 4 5; do
@@ -214,117 +238,131 @@ for i in 1 2 3 4 5; do
 done
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Only change `course/assignments/selection_policy.py` and its tests.
+## Capstone Tasks
 
-### Repair + Lock
+**Permitted Modifications:** `course/assignments/selection_policy.py` and associated tests only.
 
-1. Remove randomness. Implement a deterministic tie-break that prefers:
+### Repair and Lock
 
-   * higher `sum_logprob` (if present)
-   * then shorter completion
-   * then lexicographic text
+1. Remove randomness. Implement deterministic tie-breaking with the following precedence:
+
+   * Higher `sum_logprob` (if present)
+   * Shorter completion length
+   * Lexicographic ordering of text
 
 Example deterministic key:
 
 ```python
 def tie_break_key(sample):
     lp = sample.sum_logprob
-    lp_key = 0.0 if lp is None else -float(lp)   # negative so “higher logprob” sorts first
+    lp_key = 0.0 if lp is None else -float(lp)   # negative to sort higher logprob first
     return (lp_key, len(sample.completion), sample.completion)
 ```
 
-2. Add `tests/test_selection_policy.py`:
+2. Create `tests/test_selection_policy.py`:
 
-   * determinism test: repeated calls pick the same index
-   * tie-break test: two equal-reward samples pick the intended one
+   * Determinism test: repeated invocations select the identical index
+   * Tie-break test: given two equal-reward samples, the intended one is selected
 
-Run:
+Execute verification:
 
 ```bash
 pytest -q
 python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
 ```
 
-## 4) The “Passed” Checklist
+---
 
-* Why can Loop B improve outputs without changing the policy distribution?
-* What exact “knob” did you turn during sabotage, and how did you prove it using hashes/artifacts?
-* Why does selection code need to be deterministic in production?
+## Completion Criteria
+
+* Why can Loop B improve outputs without modifying the policy distribution?
+* What specific variable was modified during sabotage, and how was this demonstrated through artifact analysis?
+* Why must selection code be deterministic in production systems?
 
 ---
 
-# Level 1: REINFORCE Under a Microscope (Build → Over-optimize → Diagnose) — Loop C (toy)
+# Level 1: REINFORCE Algorithm Analysis — Loop C (Simplified Domain)
 
-## 1) The Mindset Shift
+## Conceptual Foundation
 
-**Wrong intuition:** “RL is supervised learning with extra steps.”
-**Correct mental model:** “RL nudges probabilities. The update direction is controlled by advantage = reward − baseline. Baselines reduce variance, not the goal.”
+**Incorrect intuition:** "RL is supervised learning with additional complexity."
 
-## 2) Student actions (exact CLI)
+**Correct mental model:** "RL adjusts probability distributions. The update direction is controlled by advantage = reward − baseline. Baselines reduce variance without altering the optimization objective."
 
-### Build (working car): stable-ish learning with baseline
+---
+
+## Procedural Steps
+
+### Build Phase: Stable Learning with Baseline
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
-### Sabotage (break it): over-optimize and/or invert learning
+### Sabotage Phase: Over-Optimization and Inverted Learning
 
-Run two sabotage experiments:
+Execute two sabotage experiments:
 
-**(A) Too aggressive learning rate**
+**(A) Excessive Learning Rate**
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
 ```
 
-**(B) Negative learning rate (learn the wrong direction)**
+**(B) Negative Learning Rate (Inverted Update Direction)**
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
-### Reflect (forensics): watch the step-by-step mechanism
+### Reflect Phase: Step-by-Step Mechanism Observation
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
 python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** You may create files under `notes/` and `course/assignments/`. Do not modify `course/bandit_train.py`.
+## Capstone Tasks
+
+**Permitted Modifications:** Files under `notes/` and `course/assignments/`. Modification of `course/bandit_train.py` is not permitted.
 
 Create `notes/reinforce_forensics.md`:
 
-* pick 10 consecutive entries from the `--slow` output (copy/paste)
-* for each entry, annotate:
+* Select 10 consecutive entries from the `--slow` output
+* For each entry, annotate:
 
-  * action, reward, baseline, advantage sign
-  * what must happen to that action’s probability next
+  * Action, reward, baseline, advantage sign
+  * The required change to that action's probability
 
-Then write 1 paragraph explaining why the sabotage runs behave differently.
-
-## 4) The “Passed” Checklist
-
-* If advantage is negative, what happens to the probability of the sampled action?
-* Why does a baseline reduce noise but not change the “direction” of learning?
-* What did negative learning rate teach you about “probability nudging”?
+Conclude with one paragraph explaining the behavioral differences observed in sabotage runs.
 
 ---
 
-# Level 2: Credit Assignment + Token/Text Boundary (Build → Remove Credit → Observe Failure → Fix)
+## Completion Criteria
 
-## 1) The Mindset Shift
+* If advantage is negative, what occurs to the probability of the sampled action?
+* Why does a baseline reduce noise without altering the learning direction?
+* What did negative learning rate demonstrate regarding probability adjustment?
 
-**Wrong intuition:** “Only the last token/action matters because reward is at the end.”
-**Correct mental model:** “In sequential generation, early decisions shape later states. End reward becomes a training signal applied across the sampled trajectory (credit assignment). Also: policy acts on tokens; verifier acts on text.”
+---
 
-## 2) Student actions (exact CLI)
+# Level 2: Credit Assignment and Token-Text Boundary
 
-### Build (working car): observe token boundary
+## Conceptual Foundation
+
+**Incorrect intuition:** "Only the terminal token matters because reward is assigned at sequence end."
+
+**Correct mental model:** "In sequential generation, early decisions constrain subsequent states. Terminal reward becomes a training signal propagated across the sampled trajectory (credit assignment). Additionally: policy operates in token space; verification operates in text space."
+
+---
+
+## Procedural Steps
+
+### Build Phase: Token Boundary Observation
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -333,88 +371,93 @@ python -m course.token_inspect "Final:\n323"
 python -m course.token_inspect "Final: 0323"
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Create `course/assignments/two_step_mdp_demo.py` and notes. Do not change scorer.
+## Capstone Tasks
 
-### Build: implement correct two-step REINFORCE
+**Permitted Modifications:** Create `course/assignments/two_step_mdp_demo.py` and associated notes. Scorer modification is not permitted.
+
+### Build: Correct Two-Step REINFORCE Implementation
 
 Create `course/assignments/two_step_mdp_demo.py`:
 
-* step 1 choose A/B
-* step 2 choose X/Y conditioned on step1
-* reward only at end
-* update **both** step policies using the same end reward (with baseline optional)
-
-Run:
+* Step 1: Select A or B
+* Step 2: Select X or Y conditioned on step 1 outcome
+* Reward assigned only at termination
+* Update **both** step policies using the terminal reward (baseline optional)
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_build_two_step
 ```
 
-### Sabotage: remove credit assignment for step 1
+### Sabotage: Remove Credit Assignment for Step 1
 
-Edit your script so **only step 2 gets updated** (step 1 stays random). Run again:
+Modify the script such that **only step 2 receives updates** (step 1 remains uniformly random):
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_sabotage_no_credit_step1
 ```
 
-### Reflect + Fix: restore updates for step 1 and re-run
+### Repair: Restore Step 1 Updates
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
 ```
 
-Write `notes/credit_assignment.md`:
+Create `notes/credit_assignment.md`:
 
-* explain what failed in sabotage and why
-* include one diagram: tokens → detokenize → text → parse → reward
-
-## 4) The “Passed” Checklist
-
-* Why can step 1 matter even when reward arrives at the end?
-* What’s macro-action vs micro-action in an LLM context?
-* Why is parsing/formatting part of the environment boundary?
+* Explain what failed during sabotage and the underlying cause
+* Include a diagram: tokens → detokenization → text → parsing → reward
 
 ---
 
-# Level 3: KL as a Leash (Build → Drop the Leash → See Drift Preference)
+## Completion Criteria
 
-## 1) The Mindset Shift
+* Why can step 1 influence outcomes even when reward is assigned at termination?
+* What distinguishes macro-actions from micro-actions in the LLM context?
+* Why is parsing/formatting considered part of the environment boundary?
 
-**Wrong intuition:** “KL is decorative math.”
-**Correct mental model:** “KL is a practical leash: improve reward, but penalize moving too far from a reference distribution.”
+---
 
-## 2) Student actions (exact CLI)
+# Level 3: KL Divergence as Regularization Constraint
 
-### Build (working car): run the KL tradeoff demo
+## Conceptual Foundation
+
+**Incorrect intuition:** "KL divergence is purely mathematical abstraction."
+
+**Correct mental model:** "KL divergence functions as a practical constraint: maximize reward while penalizing excessive divergence from a reference distribution."
+
+---
+
+## Procedural Steps
+
+### Build Phase: Execute KL Tradeoff Demonstration
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Create a small assignment script + notes. Do not modify core demo code.
+## Capstone Tasks
 
-### Build: implement KL-regularized selection on a tiny synthetic table
+**Permitted Modifications:** Create assignment scripts and notes. Core demonstration code modification is not permitted.
+
+### Build: KL-Regularized Selection on Synthetic Data
 
 Create `course/assignments/kl_regularized_choice.py`:
 
-* hardcode 6 “candidates,” each with `(reward, kl)`
-* implement choice rule: maximize `reward - beta * kl`
-* print chosen candidate for `beta = 0.1` and `beta = 1.0`
-
-Run:
+* Define 6 candidate options, each with `(reward, kl)` values
+* Implement selection rule: maximize `reward - beta * kl`
+* Output selected candidate for `beta = 0.1` and `beta = 1.0`
 
 ```bash
 python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 ```
 
-### Sabotage: remove the leash (beta = 0)
+### Sabotage: Remove Regularization Constraint (beta = 0)
 
-Modify the script so beta = 0 and re-run:
+Modify the script to set beta = 0:
 
 ```bash
 python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
@@ -424,27 +467,32 @@ python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 
 Create `notes/kl_tradeoff.md`:
 
-* explain why “beta = 0” is an attractive disaster
-* connect it to why unconstrained optimization tends to prefer extreme/high-drift solutions
-
-## 4) The “Passed” Checklist
-
-* What does KL constrain in plain English?
-* Why can removing KL preference lead to reward-hack-y behavior (even if reward rises)?
-* What is the “reference” in this mental model?
+* Explain why beta = 0 represents an attractive but problematic configuration
+* Connect this to why unconstrained optimization tends toward extreme, high-divergence solutions
 
 ---
 
-# Level 4: Reward = Spec (Build Golden Gates → Loosen Rule → Catch False Positives → Fix + Version)
+## Completion Criteria
 
-## 1) The Mindset Shift
+* What does KL divergence constrain in operational terms?
+* Why can removing KL preference lead to reward-exploiting behavior even when measured reward increases?
+* What constitutes the "reference" in this regularization framework?
 
-**Wrong intuition:** “The scorer is just an assertion.”
-**Correct mental model:** “The scorer defines the task and must be treated like production measurement software.”
+---
 
-## 2) Student actions (exact CLI)
+# Level 4: Reward Specification as Production Code
 
-### Build (working car): validate the scorer against goldens
+## Conceptual Foundation
+
+**Incorrect intuition:** "The scorer is merely an assertion statement."
+
+**Correct mental model:** "The scorer defines the task specification and must be treated as production measurement software."
+
+---
+
+## Procedural Steps
+
+### Build Phase: Validate Scorer Against Golden Test Cases
 
 ```bash
 python -m course.validate_scorer \
@@ -456,27 +504,29 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Allowed changes: `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
-(Do not touch selection or learning code in this level.)
+## Capstone Tasks
 
-### Build: black-box probes (before reading the code)
+**Permitted Modifications:** `course/core/scoring.py`, `tests/`, `data/golden/`, `notes/`.
+Selection and learning code modifications are not permitted at this level.
+
+### Build: Black-Box Specification Probing
 
 Create `notes/reward_spec_blackbox.md`:
 
-* write the format rules you believe exist
-* include 8 probe strings and predicted outcome codes
+* Document the format rules you believe exist based on observed behavior
+* Include 8 probe strings with predicted outcome codes
 
-### Sabotage: loosen one rule in the scorer
+### Sabotage: Relax One Specification Rule
 
-Pick one strict rule in `course/core/scoring.py` and deliberately weaken it (examples):
+Select one strict rule in `course/core/scoring.py` and deliberately weaken it (examples):
 
-* allow extra whitespace after `Final:`
-* allow leading zeros
-* allow multi-line outputs
+* Permit additional whitespace after `Final:`
+* Permit leading zeros
+* Permit multi-line outputs
 
-Now re-run golden checks and observe failures:
+Execute golden validation and observe failures:
 
 ```bash
 python -m course.validate_scorer \
@@ -484,41 +534,46 @@ python -m course.validate_scorer \
   --golden data/golden/golden_exploits.jsonl
 ```
 
-### Repair + Lock: restore strictness, then expand tests
+### Repair and Lock: Restore Strictness and Expand Test Coverage
 
-1. Restore the correct behavior.
-2. Add `tests/test_reward_regressions.py` with **at least 6** cases:
+1. Restore correct specification behavior.
+2. Create `tests/test_reward_regressions.py` with **at least 6** test cases:
 
-   * 2 “known correct” cases
-   * 4 exploit/edge cases (format tricks)
-3. Add `data/golden/golden_exploits_extra.jsonl` with **at least 5** new exploit cases.
-4. If reward behavior changed vs baseline, bump `SCORER_VERSION`.
+   * 2 verified correct cases
+   * 4 exploit/edge cases (format manipulation)
+3. Create `data/golden/golden_exploits_extra.jsonl` with **at least 5** additional exploit cases.
+4. If reward behavior differs from baseline, increment `SCORER_VERSION`.
 
-Validate:
+Execute verification:
 
 ```bash
 pytest -q
 python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
 ```
 
-## 4) The “Passed” Checklist
+---
 
-* What is a false positive vs false negative in this verifier?
-* Why must you version the scorer on behavior change and stop comparing old run numbers?
-* Why is “more lenient parsing” usually a trap?
+## Completion Criteria
+
+* What constitutes a false positive versus false negative in this verification context?
+* Why must the scorer be versioned upon behavioral change, invalidating comparisons with prior run metrics?
+* Why is "more lenient parsing" typically counterproductive?
 
 ---
 
-# Level 5: Goodhart Dungeon (Build a Naive Verifier → Hack It → Patch the Class)
+# Level 5: Reward Exploitation Analysis
 
-## 1) The Mindset Shift
+## Conceptual Foundation
 
-**Wrong intuition:** “Reward hacking means the optimizer is evil.”
-**Correct mental model:** “Optimizers exploit proxies. If the spec has loopholes, optimization will find them. Patch mechanisms, then lock with tests.”
+**Incorrect intuition:** "Reward hacking indicates a malicious optimizer."
 
-## 2) Student actions (exact CLI)
+**Correct mental model:** "Optimizers exploit proxy measures. If the specification contains loopholes, optimization will discover them. The solution is to patch mechanism classes and lock them with tests."
 
-### Build baseline context (optional but grounding)
+---
+
+## Procedural Steps
+
+### Build Phase: Establish Baseline Context (Optional)
 
 ```bash
 python -m course.eval \
@@ -529,52 +584,59 @@ python -m course.eval \
 python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-**Knob Budget:** Add new assignment file(s) + notes + tests. Avoid editing the real scorer unless you treat it as an instrument change.
+## Capstone Tasks
 
-### Build: write a deliberately naive verifier demo
+**Permitted Modifications:** New assignment files, notes, and tests. Modifications to the production scorer should be treated as instrument changes requiring version increment.
+
+### Build: Implement a Deliberately Naive Verifier
 
 Create `course/assignments/hackable_scorer_demo.py`:
 
-* reward = 1 if the expected integer appears anywhere in the completion (naive substring/regex style)
-* show it “works” on honest completions
+* Assign reward = 1 if the expected integer appears anywhere in the completion (naive substring/regex approach)
+* Demonstrate that it produces correct results on honest completions
 
-### Sabotage: generate 5 hacks
+### Sabotage: Generate 5 Exploits
 
-Create 5 cheating completions that score 1 without actually being a proper answer (e.g., number spray).
+Create 5 completions that achieve reward = 1 without constituting valid solutions (e.g., number enumeration).
 
-### Repair: patch the class of exploit
+### Repair: Patch the Exploit Class
 
-Modify the demo verifier logic to close the exploit class, not just one string.
+Modify the demonstration verifier to close the exploit class (not merely the specific exploit strings).
 
-Write `notes/red_team_report.md`:
+Create `notes/red_team_report.md`:
 
-* the 5 exploit strings
-* why they worked
-* the patch strategy
-* what tests would lock it permanently
-
-## 4) The “Passed” Checklist
-
-* Give a concrete example of “proxy up, true goal down.”
-* What does “patch the class, not the string” mean?
-* Why does this matter for Loop C later?
+* Document the 5 exploit strings
+* Explain why they succeeded
+* Describe the patch strategy
+* Specify what tests would prevent regression
 
 ---
 
-# Level 6: Promotion Committee (Three Controlled Traps) — Integrate A/B/C
+## Completion Criteria
 
-## 1) The Mindset Shift
+* Provide a concrete example of "proxy metric increases, true objective decreases."
+* What does "patch the class, not the instance" mean?
+* Why does this analysis matter for subsequent Loop C work?
 
-**Wrong intuition:** “Higher number = better.”
-**Correct mental model:** “A promotable improvement must be comparable under Locked Room and attributable to exactly one knob.”
+---
 
-## 2) Student actions (exact CLI)
+# Level 6: Promotion Committee (Three Controlled Experimental Traps)
 
-### Trap 1 (Sabotage): invalid promotion by instrument change (Loop A comparability break)
+## Conceptual Foundation
 
-Use your earlier tampered dataset run (or make a fresh one), then gate it:
+**Incorrect intuition:** "Higher metric value equals improvement."
+
+**Correct mental model:** "A promotable improvement must satisfy Locked Room comparability and be attributable to exactly one controlled variable."
+
+---
+
+## Procedural Steps
+
+### Trap 1 (Sabotage): Invalid Promotion via Instrument Change
+
+Use the previously tampered dataset run (or create a new one), then invoke the gate:
 
 ```bash
 python -m course.gate \
@@ -583,7 +645,7 @@ python -m course.gate \
   --min-delta 0.00
 ```
 
-### Trap 2: selection improvement without learning (Loop B)
+### Trap 2: Selection Improvement Without Learning
 
 ```bash
 python -m course.selection_demo \
@@ -599,32 +661,36 @@ python -m course.selection_demo \
   --outdir runs/l6_trap_sel_n4
 ```
 
-### Trap 3: learning changes behavior (Loop C mechanism)
+### Trap 3: Learning Modifies Behavior
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
 ```
 
-## 3) The Capstone Task (Skillset)
+---
 
-Write `notes/promotion_memo.md` (≤ 1 page):
+## Capstone Tasks
 
-* Section for each trap:
+Create `notes/promotion_memo.md` (maximum 1 page):
 
-  * loop (A/B/C)
-  * knob turned
-  * whether comparison is valid
-  * evidence (quote the relevant part of `manifest.json` / scorer version / parameter change)
-* Final paragraph: what you would PROMOTE vs REJECT today and why
+* For each trap, document:
 
-## 4) The “Passed” Checklist
-
-* If pass_rate is higher, how do you prove it’s not a Locked Room violation?
-* How do you distinguish selection improvement from learning improvement using artifacts only?
-* Why does Loop C inevitably create new failure modes that frozen rollouts can’t fully reveal?
+  * Loop classification (A/B/C)
+  * Variable modified
+  * Comparison validity assessment
+  * Evidence (quotation from `manifest.json` / scorer version / parameter modification)
+* Concluding paragraph: what would you PROMOTE versus REJECT today, with justification
 
 ---
 
-## If you complete this track correctly
+## Completion Criteria
 
-You’ll have the core skill this course is aiming for: the ability to run and interpret RL-for-LLMs experiments without confusing **measurement**, **selection**, and **learning**, and without trusting invalid comparisons.
+* If pass_rate increased, how do you demonstrate it is not a Locked Room violation?
+* How do you distinguish selection improvement from learning improvement using artifacts exclusively?
+* Why does Loop C inevitably create novel failure modes that frozen rollouts cannot fully reveal?
+
+---
+
+## Track Completion Summary
+
+Successful completion of this track establishes the core competency this course targets: the ability to execute and interpret RL-for-LLMs experiments without conflating **measurement**, **selection**, and **learning**, and without accepting methodologically invalid comparisons.
