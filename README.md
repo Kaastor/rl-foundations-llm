@@ -1,4 +1,4 @@
-# RL Foundations for LLMs — Course Harness (minimal core library, production-ish artifacts)
+# RL Foundations for LLMs
 
 This repository is a **scope-limited** teaching harness for Reinforcement Learning (RL) ideas as they show up in LLM systems.
 
@@ -22,6 +22,28 @@ Where:
 - `example` contains `{id, prompt, expected_answer}`
 - `completion` is the model output string
 - the scorer does **not** solve math — it only verifies by comparing the parsed final answer to `expected_answer`
+
+## Setup
+
+**Requirements:** Python 3.10 or higher, [Poetry](https://python-poetry.org/docs/#installation)
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd rl-foundations-llm
+   ```
+
+2. Install dependencies:
+   ```bash
+   poetry install
+   ```
+
+3. (Optional) Install with development dependencies for testing and visualization:
+   ```bash
+   poetry install --with dev
+   ```
+
+That's it. The harness is ready to use. Run commands with `poetry run` prefix or activate the shell with `poetry shell`.
 
 ## Quickstart
 
