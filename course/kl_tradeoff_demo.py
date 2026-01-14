@@ -42,6 +42,7 @@ def constrained_optimal_policy(pi_ref: Sequence[float], rewards: Sequence[float]
 
 
 def run_demo(out_dir: Path, *, plot: bool) -> dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
     actions = [f"a{i}" for i in range(6)]
     pi_ref = normalize([0.30, 0.25, 0.15, 0.10, 0.10, 0.10])
     rewards = [0.0, 0.1, 0.4, 0.6, 0.8, 1.0]
