@@ -599,7 +599,7 @@ Articulate the following statements until they are intuitive:
 
 4. **"Advantage $A = R - b$ is the learning signal. Positive advantage increases probability; negative advantage decreases it."**
 
-5. **"KL penalty $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ prevents reward hacking by constraining policy drift."**
+5. **"KL penalty $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ mitigates reward hacking by constraining policy drift."**
 
 6. **"Text has tokens. Minor formatting differences correspond to substantial probability differences in token space."**
 

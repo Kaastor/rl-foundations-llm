@@ -617,7 +617,7 @@ Wyartykułuj następujące stwierdzenia, aż staną się intuicyjne:
 
 4. **„Advantage $A = R - b$ jest sygnałem uczenia. Dodatni advantage zwiększa prawdopodobieństwo; ujemny advantage je zmniejsza."**
 
-5. **„Kara KL $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ zapobiega reward hacking poprzez ograniczanie dryfu policy."**
+5. **„Kara KL $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ łagodzi reward hacking poprzez ograniczanie dryfu policy."**
 
 6. **„Tekst ma tokeny. Drobne różnice formatowania odpowiadają znacznym różnicom prawdopodobieństwa w przestrzeni tokenów."**
 
