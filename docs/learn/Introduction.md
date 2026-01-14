@@ -423,3 +423,168 @@ You have essentially constructed a controlled laboratory environment where reinf
 - A calibrated measurement instrument ($R: X \times Y \to \mathbb{R}$)
 - A systematic optimization objective ($J(\theta) = \mathbb{E}[R]$)
 - A precise definition of success (empirical pass rate on held-out data)
+
+---
+
+## From Theory to Implementation: The Course Scripts
+
+The preceding sections establish the formal framework. This section maps those concepts to the concrete scripts you will execute. All three scripts utilize the same scorer—a function that verifies whether the model's output contains the exact format `Final: <int>` with the correct integer.
+
+### Concept Mapping Table
+
+| Formal Concept | Implementation Term | Location in Codebase |
+|----------------|---------------------|---------------------|
+| **Policy** $\pi_\theta(y \mid x)$ | "The model" | All scripts invoke the model to generate outputs |
+| **Reward function** $R(x, y)$ | "The scorer" | `score.py` — central contract implementation |
+| **Objective** $J(\theta) = \mathbb{E}[R]$ | "Performance" or "pass rate" | `eval.py` computes this empirical estimate |
+| **Empirical mean reward** $\bar{R}$ | "Pass rate" or "mean reward" | `eval.py` summary statistics |
+| **Argmax selection** $y^* = \text{argmax } R$ | "Pick the best one" | `selection_demo.py` selects highest-scoring sample |
+| **Policy gradient update** $\nabla_\theta J$ | "Update the model" | `bandit_train.py` modifies model weights |
+| **Advantage** $A = R - b$ | "Reward minus baseline" | `bandit_train.py` learning signal |
+| **KL divergence penalty** $D_{KL}$ | "Don't drift too far" | `kl_tradeoff_demo.py` demonstrates this constraint |
+
+### Script 1: Evaluation (`eval.py`) — Loop A
+
+**Purpose:** Determine the current state of system performance.
+
+**Formal operation:** Compute the empirical mean reward $\bar{R} = (1/N) \sum_{i=1}^N R(x_i, y_i)$.
+
+**What occurs:**
+1. Execute the model on a set of prompts
+2. Score every generated answer
+3. Aggregate results into pass rate and failure mode distribution
+
+**Output example:**
+```
+Pass rate: 23/100 = 23%
+Failures:
+  - Wrong answer: 65
+  - Bad format: 12
+```
+
+This script performs pure measurement. No optimization. No training. The pass rate reported is your empirical estimate of $\mathbb{E}[R]$.
+
+---
+
+### Script 2: Selection (`selection_demo.py`) — Loop B
+
+**Purpose:** Enhance performance through increased inference-time computation without modifying the model.
+
+**Formal operation:** Compute $y^* = \text{argmax}_{y \in \{y_1,\dots,y_n\}} R(x, y)$ over $N$ samples.
+
+**What occurs:**
+1. Generate $N$ completions for the same prompt
+2. Score all completions
+3. Select the highest-scoring completion
+
+**Key insight:** If the model succeeds with probability $p = 0.23$ per sample:
+- 1 sample → 23% success probability
+- 10 samples → $1 - (1 - 0.23)^{10} \approx 93\%$ probability that at least one succeeds
+
+The model's distribution $\pi_\theta$ remains unchanged. You are exploring a larger portion of its existing capability space.
+
+**Relevant metrics:**
+* **pass@1** — probability the first sample succeeds
+* **pass@N** — probability at least one of $N$ samples succeeds
+
+Selection improves pass@N substantially. It has minimal effect on pass@1, since $\pi_\theta$ itself is unchanged.
+
+---
+
+### Script 3: Learning (`bandit_train.py`) — Loop C
+
+**Purpose:** Improve pass@1 by modifying the policy itself.
+
+**Formal operation:** Update $\theta \leftarrow \theta + \alpha \cdot A \cdot \nabla_\theta \log \pi_\theta(y|x)$ where $A = R - b$.
+
+**What occurs:**
+1. Sample a completion from the current policy
+2. Score it to obtain reward $R$
+3. Compute advantage: $A = R - b$ (reward relative to baseline expectation)
+4. If $A > 0$: increase probability of that completion
+5. If $A < 0$: decrease probability of that completion
+
+This is the REINFORCE algorithm in action. The model's parameters $\theta$ are modified to make high-reward completions more probable.
+
+---
+
+### The KL Tradeoff Demonstration (`kl_tradeoff_demo.py`)
+
+**Purpose:** Visualize the reward-divergence tradeoff formalized as $J_{KL}(\theta) = \mathbb{E}[R] - \beta \cdot D_{KL}(\pi_\theta || \pi_{\text{ref}})$.
+
+In a simplified discrete action space, this demonstration allows direct observation of the Pareto frontier between "higher reward" and "lower divergence from reference policy."
+
+---
+
+## The Measurement Instrument in Practice
+
+The scorer constitutes the implementation of your reward function $R(x, y)$. Its behavior determines what the optimization process targets.
+
+**Example of specification strictness:**
+
+Consider a relaxed specification: "reward any string containing the correct number."
+
+A completion such as:
+```
+Final: 42
+But also 43 might work?
+Actually I'm not sure
+The answer could be 42
+```
+
+This string contains "42" → $R = 1$ under the relaxed specification.
+
+However, this output is not a valid solution. The model has exploited a loophole in the reward specification.
+
+**The course enforces strict specifications:**
+
+Reward is 1 **only if** the output is exactly:
+```
+Final: 42
+```
+
+No additional lines. No extraneous text. One integer in the prescribed format.
+
+This strictness is not pedantic—it is **environment design**. A loose specification permits reward hacking. A strict specification forces the model to learn the intended behavior.
+
+---
+
+## Distinguishing the Three Loops
+
+All three loops share superficial similarity:
+- Accept prompts
+- Generate completions
+- Score outputs
+- Produce numeric results
+
+This similarity obscures fundamental differences:
+
+| Loop | Operation | What Changes |
+|------|-----------|--------------|
+| **A: Evaluation** | Measure current performance | Nothing |
+| **B: Selection** | Select best of $N$ samples | Which output is deployed |
+| **C: Learning** | Train via policy gradient | The model parameters $\theta$ |
+
+If you cannot identify which loop changed between two experimental runs, your comparison is invalid.
+
+---
+
+## Verification Checklist Before Examining Code
+
+Articulate the following statements until they are intuitive:
+
+1. **"The scorer is my measurement instrument. If I modify it, I have changed what I am measuring."**
+
+2. **"Loop A measures $\mathbb{E}[R]$. Loop B computes $\max R$ over samples. Loop C optimizes $\nabla_\theta \mathbb{E}[R]$."**
+
+3. **"Selection improves pass@N. Training improves pass@1."**
+
+4. **"Advantage $A = R - b$ is the learning signal. Positive advantage increases probability; negative advantage decreases it."**
+
+5. **"KL penalty $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ prevents reward hacking by constraining policy drift."**
+
+6. **"Text has tokens. Minor formatting differences correspond to substantial probability differences in token space."**
+
+If these statements are clear, you possess the conceptual framework to approach the implementation as engineering detail rather than as an opaque system.
+
+The code implements these concepts. The mental model determines whether you understand what the code is doing.
