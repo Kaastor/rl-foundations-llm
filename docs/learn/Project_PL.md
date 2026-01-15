@@ -6,27 +6,27 @@
 
 **Tytuł projektu:** Verifier-Driven Math QA — budowa, celowe psucie i systematyczne utwardzanie
 
-Ta ścieżka ma wymusić zrozumienie: wielokrotnie przejdziesz przez ten sam, uporządkowany cykl eksperymentalny:
+Celem tej ścieżki jest wymuszenie głębokiego zrozumienia poprzez wielokrotne przejście przez uporządkowany cykl eksperymentalny:
 
-1. **Build (ustawienie punktu odniesienia):** Budujesz czystą, deterministyczną linię bazową, którą rozumiesz i nad którą masz pełną kontrolę.
-2. **Sabotage (kontrolowane zakłócenie):** Wprowadzasz dokładnie jedną, jawną zmianę, która łamie jedną z kluczowych zasad.
-3. **Reflect (analiza śledcza / forensyczna):** Zamiast oceniać „na oko”, patrzysz w artefakty (`manifest.json`, `summary.json`, `results.jsonl`) i na ich podstawie opisujesz tryb porażki.
-4. **Repair and Lock (napraw i zablokuj):** Naprawiasz mechanizm i kodujesz zabezpieczenie jako testy/bramki, żeby regresja nie wróciła.
+1. **Build (ustawienie punktu odniesienia):** Celem jest ustanowienie czystej, deterministycznej linii bazowej, która jest w pełni zrozumiała i kontrolowalna.
+2. **Sabotage (kontrolowane zakłócenie):** Celem jest wprowadzenie dokładnie jednej, jawnej zmiany, która narusza jedną z kluczowych zasad systemu.
+3. **Reflect (analiza śledcza / forensyczna):** Zamiast oceniać „na oko”, patrzysz w artefakty (`manifest.json`, `summary.json`, `results.jsonl`) oraz opis trybu porażki na ich podstawie.
+4. **Repair and Lock (napraw i zablokuj):** Celem jest naprawa mechanizmu oraz implementacja zabezpieczeń w formie testów i bramek, w celu zapobieżenia ponownemu wystąpieniu regresji.
 
-Kroki **Sabotage** są sercem dydaktyki tej ścieżki — nie pomijaj ich.
+Kroki **Sabotage** stanowią rdzeń dydaktyczny tej ścieżki i nie powinny być pomijane.
 
 ---
 
-## Dlaczego to istnieje
+## Uzasadnienie
 
-Procesy trenowania i ewaluacji LLM łatwo źle zinterpretować. Metryki mogą się zmieniać, bo zmieniłeś scorer, dataset albo regułę selekcji, a nie sam model. Ta ścieżka uczy dyscypliny pomiaru: zbuduj czystą linię bazową, wprowadź jedną kontrolowaną zmianę, obejrzyj artefakty i zablokuj poprawkę. Celem są wiarygodne dowody, nie tylko wyższe liczby.
+Procesy trenowania i ewaluacji modeli językowych są podatne na błędną interpretację. Metryki mogą ulegać zmianom w wyniku modyfikacji scorera, datasetu lub reguły selekcji, a nie w wyniku rzeczywistej poprawy modelu. Niniejsza ścieżka kształci dyscyplinę pomiaru: ustanowienie czystej linii bazowej, wprowadzenie pojedynczej kontrolowanej zmiany, analiza artefaktów oraz zabezpieczenie poprawki. Celem są wiarygodne dowody empiryczne, nie jedynie wzrost wartości liczbowych.
 
-## Gdzie to ważne w cyklu życia LLM
+## Zastosowanie w cyklu życia LLM
 
-- Przygotowanie danych i ewaluacja: trzymaj stały dataset, prompt i scorer, żeby porównania miały sens.
+- Przygotowanie danych i ewaluacja: utrzymywanie stałego datasetu, promptu i scorera w celu zachowania porównywalności.
 - Specyfikacja nagrody i weryfikacja: scorer i modele nagrody to instrumenty używane w produkcji — muszą być deterministyczne i wersjonowane.
-- Selekcja podczas inferencji: Best-of-N potrafi podnieść wyniki bez uczenia, więc atrybucja („skąd poprawa?”) musi być jawna.
-- Trening (SFT/RLHF/DPO): przypisywanie zasług (credit assignment), wariancja i ograniczenia KL decydują, czy uczenie jest stabilne i ma sens.
+- Selekcja podczas inferencji: Best-of-N może podnieść wyniki bez uczenia, w wyniku czego atrybucja („skąd poprawa?”) musi być jawna.
+- Trening (SFT/RLHF/DPO): przypisywanie zasług (credit assignment), wariancja i ograniczenia KL decydują o tym, czy uczenie jest stabilne.
 - Wdrożenie i monitoring: testy regresji, golden sety i bramki zapobiegają cichej degradacji metryk albo „reward hackingowi”.
 - Analiza incydentów: analiza śledcza oparta na artefaktach pozwala udowodnić, co się zmieniło i dlaczego.
 
@@ -34,13 +34,13 @@ Procesy trenowania i ewaluacji LLM łatwo źle zinterpretować. Metryki mogą si
 
 ## Uwaga o zakresie (praktyka)
 
-Te zadania **nie** trenują ani nie próbkują realnego LLM. Część dotycząca „policy” jest tu syntetyczna, żeby mechanika była widoczna jak na dłoni — transfer do prawdziwych systemów LLM jest więc bardziej koncepcyjny niż „kliknij i działa”.
+Te zadania **nie** trenują ani nie próbkują realnego LLM. Część dotycząca „policy” jest tu syntetyczna w celu zapewnienia klarowności mechaniki — transfer do prawdziwych systemów LLM jest zatem bardziej koncepcyjny niż „kliknij i działa”.
 
-Jeśli chcesz praktycznego ugruntowania, opcjonalnym rozszerzeniem jest podpięcie LLM, wygenerowanie nowych rolloutów i ponowne uruchomienie Loop A/B przy zachowaniu dyscypliny pomiaru.
+W celu praktycznego ugruntowania, opcjonalnym rozszerzeniem jest podpięcie LLM, wygenerowanie nowych rolloutów i ponowne uruchomienie Loop A/B przy zachowaniu dyscypliny pomiaru.
 
 ### Opcjonalne rozszerzenie: rollouty z Groq (minimalna zmiana)
 
-Wpisz `GROQ_API_KEY` do pliku `.env`, a następnie:
+W celu wykorzystania opcjonalnego rozszerzenia należy umieścić `GROQ_API_KEY` w pliku `.env`, a następnie:
 
 ```bash
 # Loop A: próbkowanie uzupełnień i ewaluacja
@@ -67,7 +67,7 @@ python -m course.selection_demo \
   --outdir runs/l0_5_groq_sel
 ```
 
-Domyślny model to mały model Groq; możesz go nadpisać przez `--model` albo `GROQ_MODEL`.
+Domyślny model to mały model Groq; można go nadpisać przez `--model` lub `GROQ_MODEL`.
 
 ---
 
@@ -107,14 +107,14 @@ Funkcja `score()` powinna być traktowana z tym samym rygorem co oprogramowanie 
 
 Następujące praktyki są silnie zalecane:
 
-Utwórz dedykowany branch i commituj inkrementalnie, aby utrzymać weryfikowalny zapis modyfikacji.
+Zalecane jest utworzenie dedykowanego brancha i commitowanie inkrementalne w celu utrzymania weryfikowalny zapis modyfikacji.
 
 ```bash
 git checkout -b mastery-track
 pytest -q
 ```
 
-Dla każdego poziomu wykonaj następującą sekwencję commitów:
+Dla każdego poziomu należy wykonać następującą sekwencję commitów:
 
 * Commit stanu **Build** (ustanowienie linii bazowej).
 * Commit modyfikacji **Sabotage** (mimo że wprowadza celową awarię).
@@ -133,27 +133,27 @@ python -m course.selection_demo --help
 python -m course.bandit_train --help
 ```
 
-Jeśli używasz Poetry, uruchamiaj polecenia przez `poetry run ...` albo aktywuj `poetry shell`.
+W przypadku użycia Poetry należy uruchamiać polecenia przez `poetry run ...` lub aktywować `poetry shell`.
 
-## Zacznij tutaj (nowi studenci)
+## Punkt wyjściowy
 
-Jeśli jesteś zupełnie nowy, przeczytaj raz „Reguły fundamentalne", a potem przejdź do sekcji „Zadania zaczynają się tutaj" poniżej. Każdy poziom ma te same cztery ruchy:
+W przypadku początkujących użytkowników zaleca się przeczytanie sekcji „Reguły fundamentalne", a następnie przejście do sekcji „Zadania zaczynają się tutaj" poniżej. Każdy poziom ma te same cztery ruchy:
 
-1) Build: zbuduj czystą linię bazową, żeby mieć wiarygodny punkt odniesienia.
-2) Sabotage: celowo zmień jedną zmienną, aby zobaczyć tryb awarii.
-3) Reflect: oprzyj wnioski na artefaktach, nie na intuicji.
-4) Repair and lock: napraw mechanizm i zablokuj go testami/notatkami, aby nie wrócił.
+1) Build: celem jest ustanowienie czystej linii bazowej w celu uzyskania wiarygodnego punktu odniesienia.
+2) Sabotage: celem jest modyfikacja dokładnie jednej zmiennej w celu obserwacji trybu awarii.
+3) Reflect: celem jest oparcie wniosków na artefaktach, nie na intuicji.
+4) Repair and lock: celem jest naprawa mechanizmu i zablokowanie go testami/notatkami w celu zapobieżenia regresji.
 
-Każdy krok niżej ma krótkie wyjaśnienie „po co". Jeśli się zgubisz, wróć do sekcji „Podstawa koncepcyjna" na początku poziomu.
+Każdy krok niżej ma krótkie wyjaśnienie uzasadnienia. W przypadku trudności zaleca się powrót do sekcji „Podstawa koncepcyjna" na początku poziomu.
 
 ### Pliki zadań
 
 Pliki zadań zawierają TODO, które należy uzupełnić. Testy są szkieletem i będą się wywracać, dopóki nie ukończysz zadań.
 
-### Najczęstsze pułapki (z opisem)
+### Najczęstsze źródła błędów
 
-* **Python < 3.10:** błąd na `dataclass(slots=True)` zanim zaczniesz zadania.
-* **Naruszenie Locked Room:** porównanie przebiegów z innym datasetem/scorerem/próbkowaniem; manifesty się nie zgadzają, więc porównanie jest nieważne.
+* **Python < 3.10:** błąd na `dataclass(slots=True)` przed rozpoczęciem zadań.
+* **Naruszenie Locked Room:** porównanie przebiegów z innym datasetem/scorerem/próbkowaniem; manifesty się nie zgadzają, w wyniku czego porównanie jest nieważne.
 * **Niedeterministyczny selection:** losowy tie-break powoduje dryf wyników i niestabilne testy; hashe `results.jsonl` się różnią.
 * **Brak cofnięcia sabotażu:** pozostawiona zmiana sabotuje naprawę i kolejne poziomy.
 * **Ślepota na artefakty:** czytanie tylko `summary.json` i ignorowanie `results.jsonl`/`manifest.json` ukrywa tryby awarii.
@@ -166,24 +166,24 @@ Pliki zadań zawierają TODO, które należy uzupełnić. Testy są szkieletem i
 
 ---
 
-## Checklista artefaktów (co sprawdzać)
+## Checklista artefaktów
 
-Każdy przebieg zostawia dowody; używaj ich w README i porównaniach:
+Każdy przebieg generuje następujące artefakty, które należy wykorzystywać w README i porównaniach:
 
 * `manifest.json` — wejścia + SHA256, nazwa/wersja scorera (dowód Locked Room).
 * `results.jsonl` — rekordy per-przykład i kody outcome.
 * `summary.json` — metryki zagregowane.
 * `summary.md` — podsumowanie dla ludzi.
 
-Niektóre zadania dodają extra artefakty (np. `traj.jsonl`, `kl_tradeoff.csv`).
+Niektóre zadania dodają dodatkowe artefakty (np. `traj.jsonl`, `kl_tradeoff.csv`).
 
-Jeśli chcesz udowodnić deterministyczność, haszuj `results.jsonl` w powtórzonych przebiegach.
+W celu udowodnienia deterministyczności należy wykonać haszowanie `results.jsonl` w powtórzonych przebiegach.
 
 ---
 
 ## Samodzielna walidacja (sprawdzenie)
 
-Jeśli poniższe sprawdzenia przechodzą, najpewniej masz poprawne rozwiązania. Jeśli popełniłeś błąd, co najmniej jeden test powinien się wyłożyć albo wynik/artefakty będą nieoczekiwane.
+W przypadku pomyślnego przejścia poniższych sprawdzeń rozwiązania są najprawdopodobniej poprawne. W przypadku błędu co najmniej jeden test powinien zakończyć się niepowodzeniem lub wynik/artefakty będą nieoczekiwane.
 
 ### 1) Uruchom testy zadań
 
@@ -216,7 +216,7 @@ for i in 1 2 3; do
 done
 ```
 
-Jeśli hashe się zgadzają, polityka selekcji jest deterministyczna.
+Zgodność haszy potwierdza deterministyczność polityki selekcji.
 
 ### 4) Szybka kontrola artefaktów
 
@@ -237,7 +237,7 @@ Od tego miejsca idź poziom po poziomie. Każdy poziom jest napisany krok po kro
 
 **Błędna intuicja:** „Model działa słabo."
 
-**Poprawny model mentalny:** „Loop A stanowi weryfikację instrumentu pomiarowego. Jeśli zmierzona wartość się zmieniła, to albo (a) policy się zmieniła, albo (b) warunki pomiaru się zmieniły. Celem jest określenie, które."
+**Poprawny model mentalny:** „Loop A stanowi weryfikację instrumentu pomiarowego. W przypadku zmiany zmierzonej wartości, przyczyną jest (a) zmiana policy lub (b) zmiana warunków pomiaru. Celem jest określenie, które."
 
 ---
 
@@ -253,7 +253,7 @@ Od tego miejsca idź poziom po poziomie. Każdy poziom jest napisany krok po kro
 
 ### Krok 1 - Build: Wykonanie czystej ewaluacji Loop A
 
-Budujesz czystą linię bazową, aby późniejsze porównania miały wiarygodny punkt odniesienia.
+Celem jest ustanowienie czystej linii bazowej w celu zapewnienia wiarygodnego punktu odniesienia dla późniejszych porównań.
 
 ```bash
 python -m course.eval \
@@ -266,7 +266,7 @@ python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --s
 
 ### Krok 2 - Sabotage: Wprowadzenie manipulacji datasetu (naruszenie Locked Room)
 
-Celowo zmieniasz jedną etykietę, żeby pokazać, że metryki mogą się przesunąć bez zmiany policy.
+Celem jest modyfikacja dokładnie jednej etykiety w celu zademonstrowania, że metryki mogą ulec zmianie bez modyfikacji policy.
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
@@ -280,7 +280,7 @@ python -m course.eval \
 
 ### Krok 3 - Reflect: Wywołanie bramki do oceny porównywalności
 
-Używasz bramki, żeby wykazać, że przebiegi nie są porównywalne; oczekiwany REJECT to zabezpieczenie.
+Celem jest wykorzystanie bramki w celu wykazania, że przebiegi nie są porównywalne; oczekiwany REJECT to zabezpieczenie.
 
 ```bash
 python -m course.gate \
@@ -338,9 +338,9 @@ pytest -q
 
 ## Kryteria ukończenia
 
-* Mając dwa przebiegi ewaluacji z różniącymi się wynikami, czy potrafisz wyliczyć poprawne przyczyny i dostarczyć dowody z `manifest.json`?
-* Czy potrafisz wyartykułować rozróżnienie między **błędem formatu** a **błędem matematycznym** używając outcome codes?
-* Czy potrafisz wyjaśnić, dlaczego „zmanipulowany dataset poprawił pass_rate" nie stanowi poprawnej poprawy?
+* Weryfikacja: czy możliwe jest wyliczenie poprawnych przyczyn i dostarczenie dowodów z `manifest.json` dla dwóch przebiegów ewaluacji z różniącymi się wynikami?
+* Weryfikacja: czy możliwe jest wyartykułowanie rozróżnienia między **błędem formatu** a **błędem matematycznym** z użyciem outcome codes?
+* Weryfikacja: czy możliwe jest wyjaśnienie, dlaczego „zmanipulowany dataset poprawił pass_rate" nie stanowi poprawnej poprawy?
 
 ---
 
@@ -366,7 +366,7 @@ pytest -q
 
 ### Krok 1 - Build: Wykonanie demo selection na dostarczonych danych
 
-Ustanawiasz linię bazową selection, żeby mieć punkt odniesienia dla późniejszych zmian.
+Celem jest ustanowienie linii bazowej selection w celu uzyskania punktu odniesienia dla późniejszych zmian.
 
 ```bash
 python -m course.selection_demo \
@@ -380,7 +380,7 @@ python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 
 ### Krok 2 - Sabotage: Wprowadzenie niedeterminizmu do tie-breaking
 
-Wstrzykujesz losowość, aby pokazać, że niedeterministyczny tie-break destabilizuje artefakty.
+Celem jest wprowadzenie losowości w celu zademonstrowania, że niedeterministyczny tie-break destabilizuje artefakty.
 
 Edytuj `course/assignments/selection_policy.py`.
 
@@ -407,7 +407,7 @@ done
 
 ### Krok 3 - Reflect: Wykazanie wariancji przez analizę artefaktów
 
-Potwierdzasz niedeterministyczność, pokazując różne hashe `results.jsonl`.
+Celem jest potwierdzenie niedeterministyczności poprzez wykazanie różnic w hashach `results.jsonl`.
 
 Oblicz hash każdego `results.jsonl`. Jeśli selection jest niedeterministyczne, hashe będą się różnić:
 
@@ -486,7 +486,7 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 
 ### Krok 1 - Build: Stabilne uczenie z baseline
 
-Ustanawiasz zdrową linię bazową uczenia, aby rozpoznać późniejsze awarie.
+Celem jest ustanowienie zdrowej linii bazowej uczenia w celu rozpoznania późniejszych awarii.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
@@ -494,7 +494,7 @@ python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir 
 
 ### Krok 2 - Sabotage: Nadmierna optymalizacja i odwrócone uczenie
 
-Celowo destabilizujesz uczenie, aby zobaczyć dwa różne tryby awarii.
+Celem jest destabilizacja uczenia w celu obserwacji dwóch różnych trybów awarii.
 
 Wykonaj dwa eksperymenty sabotażowe:
 
@@ -512,7 +512,7 @@ python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir
 
 ### Krok 3 - Reflect: Obserwacja mechanizmu krok po kroku
 
-Tryb slow pozwala zobaczyć, jak znaki advantage zmieniają prawdopodobieństwa.
+Tryb slow umożliwia obserwację wpływu znaków advantage na prawdopodobieństwa.
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
@@ -569,7 +569,7 @@ Zakończ jednym akapitem wyjaśniającym różnice behawioralne zaobserwowane w 
 
 ### Krok 1 - Build: Obserwacja granicy tokenów
 
-Obserwujesz, jak drobne zmiany formatu tworzą inne tokenizacje, co tłumaczy rygor formatu.
+Celem jest obserwacja wpływu drobnych zmian formatu na tokenizację, co wyjaśnia rygor wymagań formatowych.
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -582,13 +582,13 @@ python -m course.token_inspect "Final: 0323"
 
 ## Zadania Capstone
 
-Cel: zbudować dwukrokowe demo MDP, celowo je zepsuć, a potem naprawić i wyjaśnić dlaczego.
+Cel: zbudowanie dwukrokowego demo MDP, celowe wprowadzenie awarii, następnie naprawa i wyjaśnienie przyczyn.
 
 **Dozwolone modyfikacje:** Utwórz `course/assignments/two_step_mdp_demo.py` i powiązane notatki. Modyfikacja scorera nie jest dozwolona.
 
 ### Krok 2 - Build: Poprawna implementacja dwukrokowego REINFORCE
 
-Implementujesz środowisko dwukrokowe, aby credit assignment w czasie było widoczne.
+Celem jest implementacja środowiska dwukrokowego w celu uwidocznienia temporalnego credit assignment.
 
 Utwórz `course/assignments/two_step_mdp_demo.py`:
 
@@ -603,7 +603,7 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 ### Krok 3 - Sabotage: Usunięcie credit assignment dla kroku 1
 
-Usuwasz aktualizacje kroku 1, aby zobaczyć, co się psuje bez credit assignment.
+Celem jest usunięcie aktualizacji kroku 1 w celu obserwacji konsekwencji braku credit assignment.
 
 Zmodyfikuj skrypt tak, aby **tylko krok 2 otrzymywał aktualizacje** (krok 1 pozostaje jednostajnie losowy):
 
@@ -613,7 +613,7 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 ### Krok 4 - Repair: Przywrócenie aktualizacji kroku 1
 
-Przywracasz aktualizacje kroku 1, aby odzyskać uczenie i porównać artefakty.
+Celem jest przywrócenie aktualizacji kroku 1 w celu odzyskania uczenia i porównania artefaktów.
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
@@ -658,7 +658,7 @@ Wyjaśnij prostym językiem, co zawiodło podczas sabotażu i dlaczego naprawa d
 
 ### Krok 1 - Build: Wykonanie demonstracji kompromisu KL
 
-Uruchamiasz demo, żeby zobaczyć kompromis reward vs KL zanim napiszesz kod.
+Celem jest uruchomienie demo w celu obserwacji kompromisu reward vs KL przed implementacją kodu.
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
@@ -668,13 +668,13 @@ python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 
 ## Zadania Capstone
 
-Cel: zaimplementować małą regułę KL-regularized, zepsuć ją i wyjaśnić różnicę.
+Cel: implementacja małej reguły KL-regularized, wprowadzenie awarii oraz wyjaśnienie różnicy.
 
 **Dozwolone modyfikacje:** Utwórz skrypty assignment i notatki. Modyfikacja głównego kodu demonstracji nie jest dozwolona.
 
 ### Krok 2 - Build: Selekcja z regularyzacją KL na danych syntetycznych
 
-Implementujesz regułę wyboru, aby kara KL była konkretna.
+Celem jest implementacja reguły wyboru w celu ukonkretnienia kary KL.
 
 Utwórz `course/assignments/kl_regularized_choice.py`:
 
@@ -688,7 +688,7 @@ python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 
 ### Krok 3 - Sabotage: Usunięcie ograniczenia regularyzacyjnego (beta = 0)
 
-Usuwasz ograniczenie, aby zobaczyć, jak zmienia się wybór bez KL.
+Celem jest usunięcie ograniczenia w celu obserwacji zmiany wyboru bez KL.
 
 Zmodyfikuj skrypt, aby ustawić beta = 0:
 
@@ -698,7 +698,7 @@ python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 
 ### Krok 4 - Reflect
 
-Dokumentujesz, dlaczego nieograniczony wybór jest kuszący, ale ryzykowny.
+Celem jest udokumentowanie przyczyn, dla których nieograniczony wybór jest kuszący, ale ryzykowny.
 
 Utwórz `notes/kl_tradeoff.md`:
 
@@ -737,7 +737,7 @@ Utwórz `notes/kl_tradeoff.md`:
 
 ### Krok 1 - Build: Walidacja scorera względem golden test cases
 
-Ustanawiasz bieżące zachowanie scorera, żeby zmiany były mierzalne.
+Celem jest ustanowienie bieżącego zachowania scorera w celu zapewnienia mierzalności zmian.
 
 ```bash
 python -m course.validate_scorer \
@@ -760,7 +760,7 @@ Modyfikacje kodu selection i learning nie są dozwolone na tym poziomie.
 
 ### Krok 2 - Build: Sondowanie specyfikacji Black-Box
 
-Wnioskujesz o specyfikacji z obserwacji, czyli tak jak w prawdziwym black-box.
+Celem jest wnioskowanie o specyfikacji na podstawie obserwacji, zgodnie z metodologią black-box.
 
 Utwórz `notes/reward_spec_blackbox.md`:
 
@@ -769,7 +769,7 @@ Utwórz `notes/reward_spec_blackbox.md`:
 
 ### Krok 3 - Sabotage: Poluzowanie jednej reguły specyfikacji
 
-Osłabiasz jedną regułę, aby zobaczyć, jak exploity przechodzą.
+Celem jest osłabienie jednej reguły w celu obserwacji powodzenia exploitów.
 
 Wybierz jedną ścisłą regułę w `course/core/scoring.py` i celowo ją osłab (przykłady):
 
@@ -787,7 +787,7 @@ python -m course.validate_scorer \
 
 ### Krok 4 - Repair and Lock: Przywrócenie ścisłości i rozszerzenie pokrycia testami
 
-Przywracasz specyfikację i blokujesz ją testami oraz goldenami.
+Celem jest przywrócenie specyfikacji i zablokowanie jej testami oraz goldenami.
 
 1. Przywróć poprawne zachowanie specyfikacji.
 2. Utwórz `tests/test_reward_regressions.py` z **co najmniej 6** przypadkami testowymi:
@@ -836,7 +836,7 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 
 ### Krok 1 - Build: Ustanowienie kontekstu bazowego (opcjonalne)
 
-Odświeżasz kontekst działania ewaluatora; to opcjonalny materiał bazowy.
+Celem jest odświeżenie kontekstu działania ewaluatora; stanowi to opcjonalny materiał bazowy.
 
 ```bash
 python -m course.eval \
@@ -857,7 +857,7 @@ Cel: zbudować naiwny weryfikator, wyeksploatować go i naprawić klasę exploit
 
 ### Krok 2 - Build: Implementacja celowo naiwnego weryfikatora
 
-Tworzysz celowo słaby weryfikator, żeby móc zbadać jego porażki.
+Celem jest utworzenie celowo słabego weryfikatora w celu zbadania jego porażek.
 
 Utwórz `course/assignments/hackable_scorer_demo.py`:
 
@@ -866,13 +866,13 @@ Utwórz `course/assignments/hackable_scorer_demo.py`:
 
 ### Krok 3 - Sabotage: Wygenerowanie 5 exploitów
 
-Tworzysz uzupełnienia, które przechodzą naiwny test bez rozwiązania zadania.
+Celem jest utworzenie uzupełnień, które przechodzą naiwny test bez rozwiązania zadania.
 
 Utwórz 5 uzupełnień, które osiągają reward = 1 bez stanowienia poprawnych rozwiązań (np. wyliczanie liczb).
 
 ### Krok 4 - Repair: Załatanie klasy exploitów
 
-Łatasz klasę exploitów (nie tylko konkretne ciągi) i dokumentujesz poprawkę.
+Celem jest załatanie klasy exploitów (nie tylko konkretnych ciągów) oraz udokumentowanie poprawki.
 
 Zmodyfikuj demonstracyjny weryfikator, aby zamknąć klasę exploitów (nie tylko konkretne ciągi exploit).
 
@@ -881,13 +881,13 @@ Utwórz `notes/red_team_report.md`:
 * Udokumentuj 5 ciągów exploit
 * Wyjaśnij, dlaczego odniosły sukces
 * Opisz strategię łatki
-* Określ, jakie testy zapobiegłyby regresji
+* Określenie, jakie testy zapobiegłyby regresji
 
 ---
 
 ## Kryteria ukończenia
 
-* Podaj konkretny przykład „metryka proxy rośnie, prawdziwy cel maleje."
+* Podanie konkretnego przykładu „metryka proxy rośnie, prawdziwy cel maleje."
 * Co oznacza „załataj klasę, nie instancję"?
 * Dlaczego ta analiza ma znaczenie dla późniejszej pracy Loop C?
 
@@ -915,7 +915,7 @@ Utwórz `notes/red_team_report.md`:
 
 ### Krok 1 - Pułapka 1 (Sabotage): Nieważna promocja przez zmianę instrumentu
 
-Próbujesz „promocji" na podstawie naruszenia Locked Room, aby pokazać, po co jest gate.
+Celem jest próba „promocji" na podstawie naruszenia Locked Room w celu zademonstrowania uzasadnienia bramki gate.
 
 Użyj wcześniej zmanipulowanego przebiegu z datasetem (lub utwórz nowy), następnie wywołaj bramkę:
 
@@ -928,7 +928,7 @@ python -m course.gate \
 
 ### Krok 2 - Pułapka 2: Poprawa selection bez learning
 
-Pokazujesz, że metryki mogą rosnąć bez uczenia, więc promocja nie jest uzasadniona.
+Celem jest wykazanie, że metryki mogą rosnąć bez uczenia, w wyniku czego promocja nie jest uzasadniona.
 
 ```bash
 python -m course.selection_demo \
@@ -946,7 +946,7 @@ python -m course.selection_demo \
 
 ### Krok 3 - Pułapka 3: Uczenie modyfikuje zachowanie
 
-Pokazujesz realny learning, a następnie argumentujesz promocję na podstawie dowodów i ryzyka holdout.
+Celem jest wykazanie realnego learningu, a następnie argumentacja promocji na podstawie dowodów i ryzyka holdout.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
@@ -966,14 +966,14 @@ Utwórz `notes/promotion_memo.md` (maksymalnie 1 strona):
   * Zmodyfikowana zmienna
   * Ocena poprawności porównania
   * Dowody (cytat z `manifest.json` / wersja scorera / modyfikacja parametru)
-* Akapit końcowy: co byś PROMOWAŁ versus ODRZUCIŁ dziś, z uzasadnieniem
+* Akapit końcowy: co należy PROMOWAĆ versus ODRZUCIĆ, z uzasadnieniem
 
 ---
 
 ## Kryteria ukończenia
 
-* Jeśli pass_rate wzrosło, jak demonstrujesz, że nie jest to naruszenie Locked Room?
-* Jak odróżniasz poprawę selection od poprawy learning używając wyłącznie artefaktów?
+* W przypadku wzrostu pass_rate: w jaki sposób można zademonstrować, że nie jest to naruszenie Locked Room?
+* W jaki sposób można rozróżnić poprawę selection od poprawy learning wykorzystując wyłącznie artefakty?
 * Dlaczego Loop C nieuchronnie tworzy nowe tryby awarii, których zamrożone rollouts nie mogą w pełni ujawnić?
 
 ---

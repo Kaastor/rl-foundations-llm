@@ -6,41 +6,41 @@
 
 **Project Title:** Verifier-Driven Math QA — Construction, Deliberate Disruption, and Systematic Hardening
 
-This track is designed to enforce understanding through repeated application of a structured experimental cycle:
+The objective of this track is to enforce understanding through repeated application of a structured experimental cycle:
 
-1. **Build (Baseline Establishment):** Establish a clean, deterministic baseline over which the student exercises complete control.
-2. **Sabotage (Controlled Perturbation):** Introduce precisely one explicit modification that violates a core principle.
-3. **Reflect (Forensic Analysis):** Observe the resulting failure through examination of artifacts (`manifest.json`, `summary.json`, `results.jsonl`) rather than through intuitive assessment.
-4. **Repair and Lock (Mechanism Correction):** Correct the underlying mechanism and encode the fix as tests and gates to prevent regression.
+1. **Build (Baseline Establishment):** The objective is to establish a clean, deterministic baseline over which complete control is exercised.
+2. **Sabotage (Controlled Perturbation):** The objective is to introduce precisely one explicit modification that violates a core principle.
+3. **Reflect (Forensic Analysis):** The objective is to observe the resulting failure through examination of artifacts (`manifest.json`, `summary.json`, `results.jsonl`) rather than through intuitive assessment.
+4. **Repair and Lock (Mechanism Correction):** The objective is to correct the underlying mechanism and encode the fix as tests and gates to prevent regression.
 
 The Sabotage steps constitute the essential pedagogical component of this track and must not be omitted.
 
 ---
 
-## Why This Exists
+## Rationale
 
-LLM training and evaluation pipelines are easy to misread. Metrics can move because you changed the scorer, dataset, or selection rule rather than the model itself. This track trains measurement discipline: build a clean baseline, make one controlled change, inspect artifacts, and lock the fix. The goal is reliable evidence, not just higher numbers.
+LLM training and evaluation pipelines are susceptible to misinterpretation. Metrics may change due to modifications to the scorer, dataset, or selection rule rather than to the model itself. This track cultivates measurement discipline: establish a clean baseline, introduce a single controlled change, inspect artifacts, and lock the fix. The objective is reliable empirical evidence, not merely higher numerical values.
 
-## Where It Matters in the LLM Lifecycle
+## Application in the LLM Lifecycle
 
-- Data curation and eval: keep dataset, prompt, and scorer fixed so comparisons are valid.
-- Reward specification and verification: scorers and reward models are production instruments that must be deterministic and versioned.
-- Inference-time selection: Best-of-N can boost results without learning, so attribution must be explicit.
-- Training (SFT/RLHF/DPO): credit assignment, variance, and KL constraints determine whether learning is stable and meaningful.
-- Deployment and monitoring: regression tests, golden sets, and gates prevent silent metric drift or reward hacking.
-- Incident analysis: artifact-based forensics let you prove what changed and why.
+- **Data curation and evaluation:** Maintain fixed dataset, prompt, and scorer to ensure comparison validity.
+- **Reward specification and verification:** Scorers and reward models function as production instruments that must be deterministic and versioned.
+- **Inference-time selection:** Best-of-N methods can improve results without learning; therefore, attribution must be explicit.
+- **Training (SFT/RLHF/DPO):** Credit assignment, variance, and KL constraints determine whether learning is stable and meaningful.
+- **Deployment and monitoring:** Regression tests, golden sets, and gates prevent silent metric drift or reward exploitation.
+- **Incident analysis:** Artifact-based forensics enable verification of what changed and why.
 
 ---
 
-## Scope note (practicality)
+## Scope Note
 
-These assignments do **not** fine-tune or sample a real LLM. The "policy" work is synthetic to make the mechanics clear, so transfer to LLM systems is conceptual rather than hands-on.
+These assignments do **not** fine-tune or sample a real LLM. The policy component has been designed as synthetic to ensure transparency of underlying mechanisms; consequently, transfer to LLM systems is conceptual rather than directly implementational.
 
-If you want practical grounding, an optional extension is to plug in an LLM, generate fresh rollouts, and re-run Loop A/B using the same measurement discipline.
+For practical grounding, an optional extension consists of integrating an LLM, generating fresh rollouts, and re-executing Loop A/B while maintaining the same measurement discipline.
 
-### Optional extension: real rollouts via Groq (minimal change)
+### Optional Extension: Real Rollouts via Groq
 
-Add `GROQ_API_KEY` to a `.env` file, then:
+To utilize this optional extension, add `GROQ_API_KEY` to a `.env` file, then:
 
 ```bash
 # Loop A: sample completions, then eval
@@ -67,7 +67,7 @@ python -m course.selection_demo \
   --outdir runs/l0_5_groq_sel
 ```
 
-Default model is a small Groq model; override with `--model` or `GROQ_MODEL` if needed.
+The default model is a small Groq model; this may be overridden with `--model` or `GROQ_MODEL` if needed.
 
 ---
 
@@ -133,24 +133,24 @@ python -m course.selection_demo --help
 python -m course.bandit_train --help
 ```
 
-If you use Poetry, run commands with `poetry run ...` or activate `poetry shell`.
+In the case of Poetry usage, commands should be executed with `poetry run ...` or by activating `poetry shell`.
 
-## Start Here (New Students)
+## Entry Point
 
-If you are brand new, read "Foundational Rules" once, then jump to "Assignments Start Here" below. Each level follows the same four moves:
+For new users, it is recommended to read "Foundational Rules" once, then proceed to "Assignments Start Here" below. Each level follows the same four phases:
 
-1) Build a clean baseline so you have a trusted reference.
-2) Sabotage one variable on purpose to see the failure mode.
-3) Reflect using artifacts so your conclusion is evidence-based.
-4) Repair and lock the fix with tests/notes so it cannot regress.
+1) Build: The objective is to establish a clean baseline to provide a trusted reference.
+2) Sabotage: The objective is to modify precisely one variable to observe the failure mode.
+3) Reflect: The objective is to base conclusions on artifacts rather than intuition.
+4) Repair and lock: The objective is to correct the mechanism and lock the fix with tests/notes to prevent regression.
 
-Every step below includes a short explanation of why you are doing it. If you get lost, return to the "Conceptual Foundation" section at the top of the level.
+Each step below includes a brief rationale. In case of difficulty, return to the "Conceptual Foundation" section at the beginning of the level.
 
 ### Assignment files
 
 Assignment files include TODOs where you should implement missing logic. Tests are provided as scaffolds and will fail until you complete the assignments.
 
-### Common pitfalls to avoid (with descriptions)
+### Common Sources of Error
 
 * **Python < 3.10:** crashes on `dataclass(slots=True)` before you even reach the assignments.
 * **Locked Room violations:** comparing runs with different dataset/scorer/sampling; manifests disagree, so comparisons are invalid.
@@ -166,24 +166,24 @@ Assignment files include TODOs where you should implement missing logic. Tests a
 
 ---
 
-## Artifact checklist (what to inspect)
+## Artifact Checklist
 
-Each run produces evidence; use it in your README and comparisons:
+Each experimental run generates the following artifacts, which should be utilized in documentation and comparisons:
 
 * `manifest.json` — inputs + SHA256 hashes, scorer name/version (Locked Room evidence).
 * `results.jsonl` — per-example records and outcome codes.
 * `summary.json` — aggregate metrics.
 * `summary.md` — human-readable recap.
 
-Some assignments add extra artifacts (e.g., `traj.jsonl`, `kl_tradeoff.csv`).
+Some assignments add additional artifacts (e.g., `traj.jsonl`, `kl_tradeoff.csv`).
 
-If you need to prove determinism, hash `results.jsonl` across repeated runs.
+To verify determinism, compute hashes of `results.jsonl` across repeated runs.
 
 ---
 
-## Student self-check (validation)
+## Self-Validation Procedures
 
-If the checks below pass, you have likely implemented the assignments correctly. If you made a mistake, at least one check should fail or produce an unexpected artifact/result.
+If the following checks pass, the assignments have likely been implemented correctly. In the case of errors, at least one check should fail or produce unexpected artifacts/results.
 
 ### 1) Run the assignment tests
 
@@ -216,7 +216,7 @@ for i in 1 2 3; do
 done
 ```
 
-If the hashes match, your selection policy is deterministic.
+Hash correspondence confirms deterministic selection policy behavior.
 
 ### 4) Artifact sanity check
 
@@ -252,7 +252,7 @@ From here down, follow the levels in order. Each level is a step-by-step narrati
 
 ### Step 1 - Build: Execute a Clean Loop A Evaluation
 
-You are creating a clean baseline run so later comparisons have a trustworthy reference.
+The objective is to establish a clean baseline run to provide a trustworthy reference for subsequent comparisons.
 
 ```bash
 python -m course.eval \
@@ -265,7 +265,7 @@ python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --s
 
 ### Step 2 - Sabotage: Introduce Dataset Tampering (Locked Room Violation)
 
-You intentionally change one label to show how metrics can move without any policy change.
+The objective is to intentionally modify one label to demonstrate how metrics may change without any policy modification.
 
 ```bash
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
@@ -279,7 +279,7 @@ python -m course.eval \
 
 ### Step 3 - Reflect: Invoke the Gate to Assess Comparability
 
-You use the gate to prove the runs are not comparable; the expected REJECT is the guardrail.
+The objective is to utilize the gate mechanism to demonstrate that the runs are not comparable; the expected REJECT serves as a methodological guardrail.
 
 ```bash
 python -m course.gate \
@@ -337,9 +337,9 @@ pytest -q
 
 ## Completion Criteria
 
-* Given two evaluation runs with differing results, can you enumerate the valid causes and provide evidence from `manifest.json`?
-* Can you articulate the distinction between a **format failure** and a **mathematical failure** using outcome codes?
-* Can you explain why "the tampered dataset improved pass_rate" does not constitute a valid improvement?
+* Verification: Given two evaluation runs with differing results, is it possible to enumerate the valid causes and provide evidence from `manifest.json`?
+* Verification: Is it possible to articulate the distinction between a **format failure** and a **mathematical failure** using outcome codes?
+* Verification: Is it possible to explain why "the tampered dataset improved pass_rate" does not constitute a valid improvement?
 
 ---
 
@@ -364,7 +364,7 @@ pytest -q
 
 ### Step 1 - Build: Execute Selection Demo on Provided Data
 
-You are establishing a baseline selection run to compare against later changes.
+The objective is to establish a baseline selection run for comparison against subsequent modifications.
 
 ```bash
 python -m course.selection_demo \
@@ -378,7 +378,7 @@ python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 
 ### Step 2 - Sabotage: Introduce Nondeterminism into Tie-Breaking
 
-You inject randomness to show how nondeterministic tie-breaks create unstable artifacts.
+The objective is to introduce randomness to demonstrate how nondeterministic tie-breaking mechanisms create unstable artifacts.
 
 Edit `course/assignments/selection_policy.py`.
 
@@ -405,7 +405,7 @@ done
 
 ### Step 3 - Reflect: Demonstrate Variance Through Artifact Analysis
 
-You confirm nondeterminism by showing that run outputs hash differently.
+The objective is to confirm nondeterminism by demonstrating that run outputs produce different hashes.
 
 Compute a hash of each `results.jsonl`. If selection is nondeterministic, hashes will differ:
 
@@ -483,7 +483,7 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 
 ### Step 1 - Build: Stable Learning with Baseline
 
-You establish a healthy learning baseline so you can recognize later failures.
+The objective is to establish a healthy learning baseline for recognition of subsequent failure modes.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
@@ -491,7 +491,7 @@ python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir 
 
 ### Step 2 - Sabotage: Over-Optimization and Inverted Learning
 
-You intentionally destabilize learning to observe two distinct failure modes.
+The objective is to intentionally destabilize learning to observe two distinct failure modes.
 
 Execute two sabotage experiments:
 
@@ -509,7 +509,7 @@ python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir
 
 ### Step 3 - Reflect: Step-by-Step Mechanism Observation
 
-Slow mode lets you inspect how advantage signs change probabilities step by step.
+Slow mode enables inspection of how advantage signs modify probabilities incrementally.
 
 ```bash
 python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
@@ -565,7 +565,7 @@ Conclude with one paragraph explaining the behavioral differences observed in sa
 
 ### Step 1 - Build: Token Boundary Observation
 
-You observe how small formatting changes create different tokenizations, which explains why format rules matter.
+The objective is to observe how minor formatting changes produce different tokenizations, which explains the significance of format specification rigor.
 
 ```bash
 python -m course.token_inspect "Final: 323"
@@ -584,7 +584,7 @@ Purpose: build a two-step MDP demo, break it, then fix it and explain why.
 
 ### Step 2 - Build: Correct Two-Step REINFORCE Implementation
 
-You implement a two-step environment so credit assignment across time steps is visible.
+The objective is to implement a two-step environment to render temporal credit assignment observable.
 
 Create `course/assignments/two_step_mdp_demo.py`:
 
@@ -599,7 +599,7 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 ### Step 3 - Sabotage: Remove Credit Assignment for Step 1
 
-You remove step-1 updates to show what breaks when credit assignment is missing.
+The objective is to remove step-1 updates to demonstrate the consequences of absent credit assignment.
 
 Modify the script such that **only step 2 receives updates** (step 1 remains uniformly random):
 
@@ -609,7 +609,7 @@ python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline -
 
 ### Step 4 - Repair: Restore Step 1 Updates
 
-You restore step-1 updates to recover learning and compare artifacts.
+The objective is to restore step-1 updates to recover learning capability and enable artifact comparison.
 
 ```bash
 python course/assignments/two_step_mdp_demo.py --steps 200 --seed 0 --baseline --outdir runs/l2_fixed_two_step
@@ -653,7 +653,7 @@ Explain in plain language what failed during sabotage and why the repair works. 
 
 ### Step 1 - Build: Execute KL Tradeoff Demonstration
 
-You run the demo to see the reward vs KL tradeoff before writing code.
+The objective is to execute the demonstration to observe the reward vs KL tradeoff prior to code implementation.
 
 ```bash
 python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
@@ -669,7 +669,7 @@ Purpose: implement a tiny KL-regularized choice rule, break it, and explain the 
 
 ### Step 2 - Build: KL-Regularized Selection on Synthetic Data
 
-You implement the selection rule so the KL penalty is concrete.
+The objective is to implement the selection rule to render the KL penalty concrete.
 
 Create `course/assignments/kl_regularized_choice.py`:
 
@@ -683,7 +683,7 @@ python course/assignments/kl_regularized_choice.py > runs/l3_build_kl_choice.txt
 
 ### Step 3 - Sabotage: Remove Regularization Constraint (beta = 0)
 
-You remove the constraint to see how the choice shifts when KL is ignored.
+The objective is to remove the constraint to observe how the selection shifts when KL is ignored.
 
 Modify the script to set beta = 0:
 
@@ -693,7 +693,7 @@ python course/assignments/kl_regularized_choice.py > runs/l3_sabotage_no_kl.txt
 
 ### Step 4 - Reflect
 
-You document why the unconstrained choice is tempting but risky.
+The objective is to document why the unconstrained choice is attractive yet risky.
 
 Create `notes/kl_tradeoff.md`:
 
@@ -731,7 +731,7 @@ Create `notes/kl_tradeoff.md`:
 
 ### Step 1 - Build: Validate Scorer Against Golden Test Cases
 
-You establish the current scorer behavior so later changes are measurable.
+The objective is to establish current scorer behavior to ensure subsequent changes are measurable.
 
 ```bash
 python -m course.validate_scorer \
@@ -754,7 +754,7 @@ Selection and learning code modifications are not permitted at this level.
 
 ### Step 2 - Build: Black-Box Specification Probing
 
-You infer the spec by observation, which is how you reason about black-box verifiers.
+The objective is to infer the specification through observation, consistent with black-box verification methodology.
 
 Create `notes/reward_spec_blackbox.md`:
 
@@ -763,7 +763,7 @@ Create `notes/reward_spec_blackbox.md`:
 
 ### Step 3 - Sabotage: Relax One Specification Rule
 
-You weaken one rule to see how exploits slip through.
+The objective is to weaken one rule to observe how exploits succeed.
 
 Select one strict rule in `course/core/scoring.py` and deliberately weaken it (examples):
 
@@ -781,7 +781,7 @@ python -m course.validate_scorer \
 
 ### Step 4 - Repair and Lock: Restore Strictness and Expand Test Coverage
 
-You restore the spec and lock it with tests and golden cases.
+The objective is to restore the specification and lock it with tests and golden cases.
 
 1. Restore correct specification behavior.
 2. Create `tests/test_reward_regressions.py` with **at least 6** test cases:
@@ -829,7 +829,7 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 
 ### Step 1 - Build: Establish Baseline Context (Optional)
 
-You refresh context on how the current evaluator behaves; this is optional baseline evidence.
+The objective is to refresh context regarding current evaluator behavior; this constitutes optional baseline evidence.
 
 ```bash
 python -m course.eval \
@@ -850,7 +850,7 @@ Purpose: build a naive verifier, exploit it, then patch the exploit class.
 
 ### Step 2 - Build: Implement a Deliberately Naive Verifier
 
-You create a deliberately weak verifier so you can study how it fails.
+The objective is to create a deliberately weak verifier to enable study of its failure modes.
 
 Create `course/assignments/hackable_scorer_demo.py`:
 
@@ -859,13 +859,13 @@ Create `course/assignments/hackable_scorer_demo.py`:
 
 ### Step 3 - Sabotage: Generate 5 Exploits
 
-You craft exploit completions that pass the naive check without solving the problem.
+The objective is to craft exploit completions that pass the naive verification without solving the problem.
 
 Create 5 completions that achieve reward = 1 without constituting valid solutions (e.g., number enumeration).
 
 ### Step 4 - Repair: Patch the Exploit Class
 
-You patch the exploit class (not just the specific strings) and document the fix.
+The objective is to patch the exploit class (not merely specific strings) and document the fix.
 
 Modify the demonstration verifier to close the exploit class (not merely the specific exploit strings).
 
@@ -907,7 +907,7 @@ Create `notes/red_team_report.md`:
 
 ### Step 1 - Trap 1 (Sabotage): Invalid Promotion via Instrument Change
 
-You attempt a promotion based on a Locked Room violation to show why the gate exists.
+The objective is to attempt a promotion based on a Locked Room violation to demonstrate the rationale for the gate mechanism.
 
 Use the previously tampered dataset run (or create a new one), then invoke the gate:
 
@@ -920,7 +920,7 @@ python -m course.gate \
 
 ### Step 2 - Trap 2: Selection Improvement Without Learning
 
-You show how metrics can improve without any learning, so promotion is not justified.
+The objective is to demonstrate how metrics can improve without any learning; consequently, promotion is not justified.
 
 ```bash
 python -m course.selection_demo \
@@ -938,7 +938,7 @@ python -m course.selection_demo \
 
 ### Step 3 - Trap 3: Learning Modifies Behavior
 
-You show a real learning run, then argue promotion based on evidence and holdout risk.
+The objective is to demonstrate a genuine learning run, then argue for promotion based on evidence and holdout risk.
 
 ```bash
 python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
@@ -948,7 +948,7 @@ python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir 
 
 ## Capstone Tasks
 
-Purpose: write a short promotion memo that argues from artifacts, not intuition.
+Purpose: Compose a concise promotion memo that argues from artifacts rather than intuition.
 
 Create `notes/promotion_memo.md` (maximum 1 page):
 
@@ -958,7 +958,7 @@ Create `notes/promotion_memo.md` (maximum 1 page):
   * Variable modified
   * Comparison validity assessment
   * Evidence (quotation from `manifest.json` / scorer version / parameter modification)
-* Concluding paragraph: what would you PROMOTE versus REJECT today, with justification
+* Concluding paragraph: determination of what should be PROMOTED versus REJECTED, with justification
 
 ---
 
