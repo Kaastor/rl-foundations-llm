@@ -7,7 +7,7 @@
 ## Key paths
 - `course/core/`: core library (IO, scoring, eval/selection logic, artifacts). Keep changes deliberate and versioned.
 - `course/assignments/`: student-editable surfaces (start here for policy tweaks).
-- `course/`: CLI entrypoints (`python -m course.eval`, etc.).
+- `course/`: CLI entrypoints (`poetry run python -m course.eval`, etc.).
 - `data/`: datasets, rollouts, golden sets.
 - `runs/`: generated outputs (safe to delete).
 
@@ -19,8 +19,8 @@
 
 ## Golden validation (scorer changes)
 - Use `data/golden/golden_correct.jsonl` and `data/golden/golden_exploits.jsonl` with:
-  - `python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl`
-  - `python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl`
+  - `poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl`
+  - `poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl`
 
 ## Data formats
 - Dataset JSONL: `{"id","prompt","expected_answer"}`.
@@ -28,6 +28,5 @@
 - Selection pack JSONL: `{"id","samples":[...]}`
 
 ## Running and tests
-- Typical commands: `python -m course.eval`, `python -m course.selection_demo`, `python -m course.bandit_train`, `python -m course.gate`.
-- Use `poetry run <cmd>` if running inside Poetry.
-- Tests: `pytest -q` (or `poetry run pytest -q`).
+- Typical commands: `poetry run python -m course.eval`, `poetry run python -m course.selection_demo`, `poetry run python -m course.bandit_train`, `poetry run python -m course.gate`.
+- Tests: `poetry run pytest -q`.

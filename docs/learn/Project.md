@@ -44,23 +44,23 @@ To utilize this optional extension, add `GROQ_API_KEY` to a `.env` file, then:
 
 ```bash
 # Loop A: sample completions, then eval
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --outdir runs/rollouts_groq_dev
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions runs/rollouts_groq_dev/completions.jsonl \
   --outdir runs/l0_build_eval_groq
 
 # Loop B: sample a selection pack (N samples per prompt)
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --n 4 \
   --format selection \
   --outdir runs/rollouts_groq_sel
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples runs/rollouts_groq_sel/selection_pack.jsonl \
   --n 4 \
@@ -103,7 +103,7 @@ The `score()` function should be treated with the same rigor as production softw
 
 ---
 
-## Workflow Discipline
+## Workflow Discipline (optional)
 
 The following practices are strongly recommended:
 
@@ -111,7 +111,7 @@ Create a dedicated branch and commit incrementally to maintain a verifiable reco
 
 ```bash
 git checkout -b mastery-track
-pytest -q
+poetry run pytest -q
 ```
 
 For each level, execute the following commit sequence:
@@ -128,9 +128,9 @@ Before Level 0, verify the environment and entrypoints:
 
 ```bash
 python --version   # must be 3.10+
-python -m course.eval --help
-python -m course.selection_demo --help
-python -m course.bandit_train --help
+poetry run python -m course.eval --help
+poetry run python -m course.selection_demo --help
+poetry run python -m course.bandit_train --help
 ```
 
 In the case of Poetry usage, commands should be executed with `poetry run ...` or by activating `poetry shell`.
@@ -188,14 +188,14 @@ If the following checks pass, the assignments have likely been implemented corre
 ### 1) Run the assignment tests
 
 ```bash
-pytest -q
+poetry run pytest -q
 ```
 
 ### 2) Validate scorer changes (Level 4)
 
 ```bash
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl
 ```
 
 ### 3) Determinism check (Level 0.5 sabotage/repair)
@@ -255,12 +255,12 @@ From here down, follow the levels in order. Each level is a step-by-step narrati
 The objective is to establish a clean baseline run to provide a trustworthy reference for subsequent comparisons.
 
 ```bash
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_build_eval
 
-python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
+poetry run python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
 ### Step 2 - Sabotage: Introduce Dataset Tampering (Locked Room Violation)
@@ -271,7 +271,7 @@ The objective is to intentionally modify one label to demonstrate how metrics ma
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
 # Manually modify exactly ONE record's expected_answer in the tampered file.
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev_TAMPERED.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_sabotage_eval_tampered
@@ -282,7 +282,7 @@ python -m course.eval \
 The objective is to utilize the gate mechanism to demonstrate that the runs are not comparable; the expected REJECT serves as a methodological guardrail.
 
 ```bash
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -330,7 +330,7 @@ Create `tests/test_kata_01.py` with appropriate test cases. Minimum required map
 Execute verification:
 
 ```bash
-pytest -q
+poetry run pytest -q
 ```
 
 ---
@@ -367,13 +367,13 @@ pytest -q
 The objective is to establish a baseline selection run for comparison against subsequent modifications.
 
 ```bash
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
   --outdir runs/l0_5_build_sel_n4
 
-python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
+poetry run python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
 ### Step 2 - Sabotage: Introduce Nondeterminism into Tie-Breaking
@@ -448,8 +448,8 @@ def tie_break_key(sample):
 Execute verification:
 
 ```bash
-pytest -q
-python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
+poetry run pytest -q
+poetry run python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
 ```
 
 ---
@@ -486,7 +486,7 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 The objective is to establish a healthy learning baseline for recognition of subsequent failure modes.
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
 ### Step 2 - Sabotage: Over-Optimization and Inverted Learning
@@ -498,13 +498,13 @@ Execute two sabotage experiments:
 **(A) Excessive Learning Rate**
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
 ```
 
 **(B) Negative Learning Rate (Inverted Update Direction)**
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
 ### Step 3 - Reflect: Step-by-Step Mechanism Observation
@@ -512,8 +512,8 @@ python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir
 Slow mode enables inspection of how advantage signs modify probabilities incrementally.
 
 ```bash
-python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
-python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
 ```
 
 ---
@@ -568,10 +568,10 @@ Conclude with one paragraph explaining the behavioral differences observed in sa
 The objective is to observe how minor formatting changes produce different tokenizations, which explains the significance of format specification rigor.
 
 ```bash
-python -m course.token_inspect "Final: 323"
-python -m course.token_inspect "Final:  323"
-python -m course.token_inspect "Final:\n323"
-python -m course.token_inspect "Final: 0323"
+poetry run python -m course.token_inspect "Final: 323"
+poetry run python -m course.token_inspect "Final:  323"
+poetry run python -m course.token_inspect "Final:\n323"
+poetry run python -m course.token_inspect "Final: 0323"
 ```
 
 ---
@@ -656,7 +656,7 @@ Explain in plain language what failed during sabotage and why the repair works. 
 The objective is to execute the demonstration to observe the reward vs KL tradeoff prior to code implementation.
 
 ```bash
-python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
+poetry run python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 ```
 
 ---
@@ -734,11 +734,11 @@ Create `notes/kl_tradeoff.md`:
 The objective is to establish current scorer behavior to ensure subsequent changes are measurable.
 
 ```bash
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_correct.jsonl
 
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_exploits.jsonl
 ```
@@ -774,7 +774,7 @@ Select one strict rule in `course/core/scoring.py` and deliberately weaken it (e
 Execute golden validation and observe failures:
 
 ```bash
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_exploits.jsonl
 ```
@@ -794,8 +794,8 @@ The objective is to restore the specification and lock it with tests and golden 
 Execute verification:
 
 ```bash
-pytest -q
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
+poetry run pytest -q
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
 ```
 
 ---
@@ -832,12 +832,12 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 The objective is to refresh context regarding current evaluator behavior; this constitutes optional baseline evidence.
 
 ```bash
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l5_build_eval_context
 
-python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
+poetry run python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
 ```
 
 ---
@@ -912,7 +912,7 @@ The objective is to attempt a promotion based on a Locked Room violation to demo
 Use the previously tampered dataset run (or create a new one), then invoke the gate:
 
 ```bash
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -923,13 +923,13 @@ python -m course.gate \
 The objective is to demonstrate how metrics can improve without any learning; consequently, promotion is not justified.
 
 ```bash
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 1 \
   --outdir runs/l6_trap_sel_n1
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
@@ -941,7 +941,7 @@ python -m course.selection_demo \
 The objective is to demonstrate a genuine learning run, then argue for promotion based on evidence and holdout risk.
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
+poetry run python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
 ```
 
 ---

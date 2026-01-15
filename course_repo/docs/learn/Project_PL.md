@@ -29,23 +29,23 @@ Wpisz `GROQ_API_KEY` do pliku `.env`, a następnie:
 
 ```bash
 # Loop A: próbkowanie uzupełnień i ewaluacja
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --outdir runs/rollouts_groq_dev
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions runs/rollouts_groq_dev/completions.jsonl \
   --outdir runs/l0_build_eval_groq
 
 # Loop B: wygenerowanie selection pack (N próbek na prompt)
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --n 4 \
   --format selection \
   --outdir runs/rollouts_groq_sel
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples runs/rollouts_groq_sel/selection_pack.jsonl \
   --n 4 \
@@ -96,7 +96,7 @@ Utwórz dedykowany branch i commituj inkrementalnie, aby utrzymać weryfikowalny
 
 ```bash
 git checkout -b mastery-track
-pytest -q
+poetry run pytest -q
 ```
 
 Dla każdego poziomu wykonaj następującą sekwencję commitów:
@@ -113,9 +113,9 @@ Przed Level 0 zweryfikuj środowisko i entrypointy:
 
 ```bash
 python --version   # musi być 3.10+
-python -m course.eval --help
-python -m course.selection_demo --help
-python -m course.bandit_train --help
+poetry run python -m course.eval --help
+poetry run python -m course.selection_demo --help
+poetry run python -m course.bandit_train --help
 ```
 
 Jeśli używasz Poetry, uruchamiaj polecenia przez `poetry run ...` albo aktywuj `poetry shell`.
@@ -162,14 +162,14 @@ Jeśli poniższe sprawdzenia przechodzą, najpewniej masz poprawne rozwiązania.
 ### 1) Uruchom testy zadań
 
 ```bash
-pytest -q
+poetry run pytest -q
 ```
 
 ### 2) Walidacja zmian w scorerze (Level 4)
 
 ```bash
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_correct.jsonl
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits.jsonl
 ```
 
 ### 3) Sprawdzenie deterministyczności (Level 0.5 sabotage/repair)
@@ -278,12 +278,12 @@ Następujący szablon powinien być wypełniony dla każdego przebiegu eksperyme
 ### Faza Build: Wykonanie czystej ewaluacji Loop A
 
 ```bash
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_build_eval
 
-python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
+poetry run python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
 ### Faza Sabotage: Wprowadzenie manipulacji datasetu (naruszenie Locked Room)
@@ -292,7 +292,7 @@ python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --s
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
 # Ręcznie zmodyfikuj dokładnie JEDEN expected_answer w zmanipulowanym pliku.
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev_TAMPERED.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_sabotage_eval_tampered
@@ -301,7 +301,7 @@ python -m course.eval \
 ### Faza Reflect: Wywołanie bramki do oceny porównywalności
 
 ```bash
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -347,7 +347,7 @@ Utwórz `tests/test_kata_01.py` z odpowiednimi przypadkami testowymi. Minimalne 
 Wykonaj weryfikację:
 
 ```bash
-pytest -q
+poetry run pytest -q
 ```
 
 ---
@@ -375,13 +375,13 @@ pytest -q
 ### Faza Build: Wykonanie demo selection na dostarczonych danych
 
 ```bash
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
   --outdir runs/l0_5_build_sel_n4
 
-python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
+poetry run python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
 ### Faza Sabotage: Wprowadzenie niedeterminizmu do tie-breaking
@@ -450,8 +450,8 @@ def tie_break_key(sample):
 Wykonaj weryfikację:
 
 ```bash
-pytest -q
-python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
+poetry run pytest -q
+poetry run python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples data/rollouts/selection_pack_dev.jsonl --n 4 --outdir runs/l0_5_fixed_sel_n4
 ```
 
 ---
@@ -479,7 +479,7 @@ python -m course.selection_demo --dataset data/datasets/math_dev.jsonl --samples
 ### Faza Build: Stabilne uczenie z baseline
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
 ### Faza Sabotage: Nadmierna optymalizacja i odwrócone uczenie
@@ -489,20 +489,20 @@ Wykonaj dwa eksperymenty sabotażowe:
 **(A) Nadmierny learning rate**
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
 ```
 
 **(B) Ujemny learning rate (odwrócony kierunek aktualizacji)**
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
 ### Faza Reflect: Obserwacja mechanizmu krok po kroku
 
 ```bash
-python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
-python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
 ```
 
 ---
@@ -546,10 +546,10 @@ Zakończ jednym akapitem wyjaśniającym różnice behawioralne zaobserwowane w 
 ### Faza Build: Obserwacja granicy tokenów
 
 ```bash
-python -m course.token_inspect "Final: 323"
-python -m course.token_inspect "Final:  323"
-python -m course.token_inspect "Final:\n323"
-python -m course.token_inspect "Final: 0323"
+poetry run python -m course.token_inspect "Final: 323"
+poetry run python -m course.token_inspect "Final:  323"
+poetry run python -m course.token_inspect "Final:\n323"
+poetry run python -m course.token_inspect "Final: 0323"
 ```
 
 ---
@@ -615,7 +615,7 @@ Utwórz `notes/credit_assignment.md`:
 ### Faza Build: Wykonanie demonstracji kompromisu KL
 
 ```bash
-python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
+poetry run python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 ```
 
 ---
@@ -676,11 +676,11 @@ Utwórz `notes/kl_tradeoff.md`:
 ### Faza Build: Walidacja scorera względem golden test cases
 
 ```bash
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_correct.jsonl
 
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_exploits.jsonl
 ```
@@ -710,7 +710,7 @@ Wybierz jedną ścisłą regułę w `course/core/scoring.py` i celowo ją osłab
 Wykonaj walidację golden i obserwuj awarie:
 
 ```bash
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_exploits.jsonl
 ```
@@ -728,8 +728,8 @@ python -m course.validate_scorer \
 Wykonaj weryfikację:
 
 ```bash
-pytest -q
-python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
+poetry run pytest -q
+poetry run python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden data/golden/golden_exploits_extra.jsonl
 ```
 
 ---
@@ -757,12 +757,12 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 ### Faza Build: Ustanowienie kontekstu bazowego (opcjonalne)
 
 ```bash
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l5_build_eval_context
 
-python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
+poetry run python -m course.inspect_run --run runs/l5_build_eval_context --only-fails --top-k 5 --show 2
 ```
 
 ---
@@ -820,7 +820,7 @@ Utwórz `notes/red_team_report.md`:
 Użyj wcześniej zmanipulowanego przebiegu z datasetem (lub utwórz nowy), następnie wywołaj bramkę:
 
 ```bash
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -829,13 +829,13 @@ python -m course.gate \
 ### Pułapka 2: Poprawa selection bez learning
 
 ```bash
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 1 \
   --outdir runs/l6_trap_sel_n1
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
@@ -845,7 +845,7 @@ python -m course.selection_demo \
 ### Pułapka 3: Learning modyfikuje zachowanie
 
 ```bash
-python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
+poetry run python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
 ```
 
 ---

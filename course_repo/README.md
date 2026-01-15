@@ -51,30 +51,30 @@ From the repo root:
 
 ```bash
 # Loop A: eval frozen rollouts
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl
 
 # Inspect a run: group failures and show examples
-python -m course.inspect_run --run runs/<your_run_dir> --only-fails
+poetry run python -m course.inspect_run --run runs/<your_run_dir> --only-fails
 
 # Loop B: Best-of-N selection (uses student-editable selection policy)
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4
 
-# Gate candidate vs baseline (production-ish “should we promote?” check)
-python -m course.gate \
+# Gate candidate vs baseline (production-ish "should we promote?" check)
+poetry run python -m course.gate \
   --baseline runs/<baseline_eval_run> \
   --candidate runs/<candidate_eval_run> \
   --min-delta 0.00
 
 # Loop C: tiny policy-gradient microscope (no LLMs)
-python -m course.bandit_train --steps 200 --baseline
+poetry run python -m course.bandit_train --steps 200 --baseline
 
 # Optional: KL tradeoff demo (no LLMs)
-python -m course.kl_tradeoff_demo --plot
+poetry run python -m course.kl_tradeoff_demo --plot
 ```
 
 Each command creates a new folder under `runs/` containing:
@@ -86,7 +86,7 @@ Each command creates a new folder under `runs/` containing:
 ## Repo layout (what to touch)
 
 - `course/core/` — **tiny library**: IO, schemas, scoring contract, eval/selection logic, artifacts
-- `course/` — CLI entrypoints (`python -m course.eval`, etc.)
+- `course/` — CLI entrypoints (`poetry run python -m course.eval`, etc.)
 - `course/assignments/` — **student-editable surfaces** (start here)
 - `tests/` — tests (optional but recommended)
 - `data/` — teacher-provided datasets and frozen rollouts
@@ -144,10 +144,8 @@ Samples may also be objects with metadata:
 
 ## Running tests
 
-If you have `pytest`:
-
 ```bash
-pytest -q
+poetry run pytest -q
 ```
 
 (Tests are optional; the scripts run without installing anything.)

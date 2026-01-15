@@ -47,12 +47,12 @@ Consequently, this course is structured around the development of a reliable mea
 Before you start the project levels, keep these concrete details in mind:
 
 - **Python version:** Use Python 3.10+ (if `python3` is older, use `python3.11` or `poetry run`).
-- **How to run:** Scripts are invoked as modules (e.g., `python -m course.eval`). With Poetry: `poetry run python -m course.eval`.
+- **How to run:** Scripts are invoked as modules: `poetry run python -m course.eval`.
 - **Where outputs go:** Runs are written under `runs/<name>/` and typically include `manifest.json`, `results.jsonl`, `summary.json`, and `summary.md`.
 - **Where you edit:** Student surfaces live in `course/assignments/`, reflections in `notes/`, and tests in `tests/`.
 - **Determinism expectation:** Runs should be reproducible; if in doubt, hash `results.jsonl` across repeated runs.
 - **Optional plots:** `--plot` in the KL demo requires matplotlib; if missing, it will skip plotting.
-- **Optional Groq sampling:** Put `GROQ_API_KEY` in a `.env` file and use `python -m course.rollout_sample` to generate real-model rollouts.
+- **Optional Groq sampling:** Put `GROQ_API_KEY` in a `.env` file and use `poetry run python -m course.rollout_sample` to generate real-model rollouts.
 
 ## The Environment: A Controlled System of Prompts and Verification
 

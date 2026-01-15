@@ -13,12 +13,12 @@ Note: Paths in this walkthrough match the student repo layout (`course_repo`), w
 ### Assignment description (copied)
 Build:
 ```
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_build_eval
 
-python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
+poetry run python -m course.inspect_run --run runs/l0_build_eval --only-fails --top-k 5 --show 2
 ```
 
 Sabotage:
@@ -26,7 +26,7 @@ Sabotage:
 cp data/datasets/math_dev.jsonl data/datasets/math_dev_TAMPERED.jsonl
 # Manually modify exactly ONE record's expected_answer in the tampered file.
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev_TAMPERED.jsonl \
   --completions data/rollouts/frozen_rollouts_dev.jsonl \
   --outdir runs/l0_sabotage_eval_tampered
@@ -34,7 +34,7 @@ python -m course.eval \
 
 Reflect:
 ```
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -98,13 +98,13 @@ This level builds the habit of using manifests and gates for valid comparisons, 
 ### Assignment description (copied)
 Build:
 ```
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
   --outdir runs/l0_5_build_sel_n4
 
-python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
+poetry run python -m course.inspect_run --run runs/l0_5_build_sel_n4 --top-k 5 --show 1
 ```
 
 Sabotage:
@@ -187,23 +187,23 @@ Production selection layers must be deterministic to avoid flaky outputs and har
 ### Assignment description (copied)
 ```
 # Loop A: sample completions, then eval
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --outdir runs/rollouts_groq_dev
 
-python -m course.eval \
+poetry run python -m course.eval \
   --dataset data/datasets/math_dev.jsonl \
   --completions runs/rollouts_groq_dev/completions.jsonl \
   --outdir runs/l0_build_eval_groq
 
 # Loop B: sample a selection pack (N samples per prompt)
-python -m course.rollout_sample \
+poetry run python -m course.rollout_sample \
   --dataset data/datasets/math_dev.jsonl \
   --n 4 \
   --format selection \
   --outdir runs/rollouts_groq_sel
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples runs/rollouts_groq_sel/selection_pack.jsonl \
   --n 4 \
@@ -253,19 +253,19 @@ Adds a true model sampling loop while preserving the same measurement discipline
 ### Assignment description (copied)
 Build:
 ```
-python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 0.5 --baseline --outdir runs/l1_build_bandit
 ```
 
 Sabotage:
 ```
-python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
-python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr 2.0 --baseline --outdir runs/l1_sabotage_lr2
+poetry run python -m course.bandit_train --steps 200 --seed 0 --lr -0.5 --baseline --outdir runs/l1_sabotage_lrneg
 ```
 
 Reflect:
 ```
-python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
-python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr 0.5 --baseline --slow --outdir runs/l1_build_slow
+poetry run python -m course.bandit_train --steps 30 --seed 0 --lr -0.5 --baseline --slow --outdir runs/l1_sabotage_slow_lrneg
 ```
 
 Capstone:
@@ -316,10 +316,10 @@ Engineers need intuition for advantage signs and update directions; it prevents 
 ### Assignment description (copied)
 Build (token inspection):
 ```
-python -m course.token_inspect "Final: 323"
-python -m course.token_inspect "Final:  323"
-python -m course.token_inspect "Final:\n323"
-python -m course.token_inspect "Final: 0323"
+poetry run python -m course.token_inspect "Final: 323"
+poetry run python -m course.token_inspect "Final:  323"
+poetry run python -m course.token_inspect "Final:\n323"
+poetry run python -m course.token_inspect "Final: 0323"
 ```
 
 Capstone:
@@ -376,7 +376,7 @@ This makes it explicit that terminal reward must credit earlier actions, and tha
 ### Assignment description (copied)
 Build:
 ```
-python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
+poetry run python -m course.kl_tradeoff_demo --plot --outdir runs/l3_build_kl_demo
 ```
 
 Capstone:
@@ -426,11 +426,11 @@ Makes the KL constraint concrete: reward can be optimized while bounding distrib
 ### Assignment description (copied)
 Build:
 ```
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_correct.jsonl
 
-python -m course.validate_scorer \
+poetry run python -m course.validate_scorer \
   --dataset data/datasets/math_dev.jsonl \
   --golden data/golden/golden_exploits.jsonl
 ```
@@ -512,7 +512,7 @@ Builds the ability to identify proxy-metric exploits and to patch entire exploit
 ### Assignment description (copied)
 Trap 1:
 ```
-python -m course.gate \
+poetry run python -m course.gate \
   --baseline runs/l0_build_eval \
   --candidate runs/l0_sabotage_eval_tampered \
   --min-delta 0.00
@@ -520,13 +520,13 @@ python -m course.gate \
 
 Trap 2:
 ```
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 1 \
   --outdir runs/l6_trap_sel_n1
 
-python -m course.selection_demo \
+poetry run python -m course.selection_demo \
   --dataset data/datasets/math_dev.jsonl \
   --samples data/rollouts/selection_pack_dev.jsonl \
   --n 4 \
@@ -535,7 +535,7 @@ python -m course.selection_demo \
 
 Trap 3:
 ```
-python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
+poetry run python -m course.bandit_train --steps 200 --seed 1 --lr 0.5 --baseline --outdir runs/l6_trap_learning
 ```
 
 Capstone:
