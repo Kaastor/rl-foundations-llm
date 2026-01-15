@@ -27,7 +27,7 @@ LLM training and evaluation pipelines are susceptible to misinterpretation. Metr
 - **Reward specification and verification:** Scorers and reward models function as production instruments that must be deterministic and versioned.
 - **Inference-time selection:** Best-of-N methods can improve results without learning; therefore, attribution must be explicit.
 - **Training (SFT/RLHF/DPO):** Credit assignment, variance, and KL constraints determine whether learning is stable and meaningful.
-- **Deployment and monitoring:** Regression tests, golden sets, and gates prevent silent metric drift or reward exploitation.
+- **Deployment and monitoring:** Regression tests, golden sets, and gates prevent silent metric drift or reward hacking.
 - **Incident analysis:** Artifact-based forensics enable verification of what changed and why.
 
 ---
@@ -808,7 +808,7 @@ python -m course.validate_scorer --dataset data/datasets/math_dev.jsonl --golden
 
 ---
 
-# Level 5: Reward Exploitation Analysis
+# Level 5: Reward Hacking Analysis
 
 ## Conceptual Foundation
 
