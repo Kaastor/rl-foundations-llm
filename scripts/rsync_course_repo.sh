@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# /bin/bash -lc scripts/rsync_course_repo.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -8,6 +9,7 @@ mkdir -p "${DEST}"
 
 rsync -a --delete \
   --exclude ".git/" \
+  --exclude ".venv" \
   --exclude "scripts/" \
   --exclude "course_repo/" \
   --exclude ".env" \

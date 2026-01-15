@@ -2,13 +2,23 @@
 
 ---
 
+## Dlaczego ten kurs?
+
+Ten kurs uczy sposobu myślenia, który chroni przed kosztownymi pomyłkami. Większość tutoriali RL skupia się na algorytmach, ale w praktyce większość porażek bierze się z **pomiaru**: zmieniłeś weryfikator (scorer), zbiór danych (dataset) albo regułę selekcji próbek (selection) zamiast faktycznie poprawić model; nagroda została „zhakowana”; wyników nie da się odtworzyć.
+
+W tym kursie traktujesz nagrodę jak specyfikację (testujesz ją jak kod), odróżniasz realną poprawę od artefaktów i samooszukiwania (Zasada Locked Room) oraz rozumiesz *dlaczego* RL działa (policy gradients, przypisywanie zasług/credit assignment, ograniczenia KL) dzięki małym eksperymentom, które celowo psujesz i naprawiasz w cyklu Build/Sabotage/Reflect/Repair.
+
+Nie wyjdziesz stąd z implementacją PPO, ale z umiejętnością krytycznej oceny systemów RLHF: czy metryka jest wiarygodna, czy poprawa to uczenie, czy tylko selekcja lepszych próbek, i co się dzieje, gdy presja optymalizacji znajduje lukę w specyfikacji.
+
+---
+
 ## Podstawowe pojęcia
 
-Duży Model Językowy (Large Language Model, LLM) funkcjonuje jako system probabilistyczny: po otrzymaniu promptu $x$ nie generuje pojedynczej, deterministycznej odpowiedzi. Definiuje natomiast **warunkowy rozkład prawdopodobieństwa $P(y | x)$** nad możliwymi uzupełnieniami $y$, gdzie każdy token w uzupełnieniu jest próbkowany sekwencyjnie zgodnie z wyuczonym rozkładem modelu.
+Duży Model Językowy (Large Language Model, LLM) definiuje **warunkowy rozkład prawdopodobieństwa $P(y | x)$** nad uzupełnieniami $y$; tokeny są próbkowane sekwencyjnie zgodnie z tym rozkładem.
 
 > **Tłumaczenie matematyczne:** $P(y | x)$ czytamy jako „prawdopodobieństwo $y$ pod warunkiem $x$". Oddaje to ideę, że wyjście $y$ zależy całkowicie od kontekstu wejściowego $x$.
 
-Reinforcement Learning dla LLM (RL-for-LLMs) stosuje się w scenariuszach, w których nie jest możliwe dostarczenie modelowi oznaczonego „poprawnego ciągu wyjściowego", ale możliwe jest dostarczenie **informacji zwrotnej** dotyczącej jakości wygenerowanego wyniku.
+Reinforcement Learning dla LLM (RL-for-LLMs) stosuje się tam, gdzie nie ma jednoznacznej etykiety poprawnego wyjścia, ale da się przekazać **informację zwrotną** o jakości wyniku.
 
 Ta informacja zwrotna może przyjmować różne formy:
 
@@ -18,21 +28,34 @@ Ta informacja zwrotna może przyjmować różne formy:
 * Zgodność ze specyfikacją („To pasuje do specyfikacji")
 * Oceny bezpieczeństwa („To jest bezpieczne")
 
-W tym kursie mechanizm informacji zwrotnej jest implementowany jako **weryfikator** (zwany również **scorerem**). Weryfikator jest deterministycznym programem, który służy podwójnemu celowi:
+W tym kursie mechanizm informacji zwrotnej jest implementowany jako **weryfikator** (scorer). To deterministyczny program o dwóch rolach:
 
-1. **Instrument pomiarowy („Sprawdzacz")**: Dostarcza prawdziwego, obiektywnego raportu o tym, czy model odniósł sukces. Jest to „czerwony długopis" do ewaluacji.
-2. **Mechanizm kształtujący („Bramka")**: Definiuje nagrody środowiska. Ponieważ RL optymalizuje pod kątem nagrody, weryfikator działa jak bramka, która „kształtuje" zachowanie modelu w kierunku pożądanego celu.
+1. **Instrument pomiarowy**: obiektywnie raportuje, czy model odniósł sukces.
+2. **Bramka nagrody**: definiuje nagrody środowiska i kształtuje zachowanie.
 
 W projekcie bazowym weryfikator ocenia, czy uzupełnienie modelu zawiera poprawnie sformatowaną końcową liczbę całkowitą odpowiadającą oczekiwanej odpowiedzi.
 
-Uzasadnienie tej prostoty jest pedagogiczne: deterministyczna informacja zwrotna pozwala studentom obserwować mechanizm leżący u podstaw w sposób przejrzysty, bez zakłócającej złożoności wprowadzanej przez wyuczony reward model.
+Ta prostota jest celowa: deterministyczna informacja zwrotna odsłania mechanizm bez szumu wyuczonego reward modelu.
 
 Fundamentalna zasada przewodnia tego kursu brzmi:
 
 **Mechanizmy nagrody i ewaluacji funkcjonują jako instrumenty pomiarowe.**
 Jeśli twój instrument pomiarowy nie jest precyzyjny, twój system reinforcement learning będzie pewnie optymalizował w kierunku bezsensownych celów.
 
-W konsekwencji kurs ten jest zorganizowany wokół najpierw budowy niezawodnego instrumentu pomiarowego, a następnie jego zastosowania w trzech odrębnych trybach operacyjnych.
+Najpierw budujemy instrument pomiarowy, potem używamy go w trzech trybach operacyjnych.
+
+### Uwaga o terminologii
+
+W kodzie i nazwach plików zostawiamy angielskie terminy (bo tak nazywają się moduły i artefakty). W tekście używam polskich odpowiedników, a angielski podaję w nawiasie, gdy pomaga złapać kontekst:
+
+- **scorer / verifier** — weryfikator: deterministyczny program przyznający nagrodę i generujący diagnostykę
+- **dataset** — zbiór danych: lista przykładów/promptów
+- **prompt** — polecenie wejściowe
+- **policy** — strategia generowania modelu (rozkład $\pi_\theta(y\mid x)$)
+- **selection** — selekcja: wybór najlepszej z N próbek bez zmiany parametrów
+- **learning** — uczenie: aktualizacja parametrów policy (to jest faktyczna „nauka”)
+- **rollout** — rollout: pojedyncza wygenerowana próbka/traektoria
+- **baseline / advantage** — sztuczki z REINFORCE: baseline redukuje wariancję, a advantage = reward − baseline
 
 ---
 
@@ -52,10 +75,10 @@ Zanim zaczniesz poziomy projektu, pamiętaj o kilku konkretach:
 
 Klasyczna teoria reinforcement learning opisuje „środowisko" jako Markov Decision Process (MDP), który dostarcza obserwacji i nagród. W reinforcement learning dla LLM, szczególnie dla zadań jednoturowych, „środowisko" zazwyczaj składa się z następujących komponentów:
 
-1. **Rozkład promptów** $p(x)$ (twój dataset)
-2. **Policy** $\pi_\theta(y | x)$ (LLM sparametryzowany przez $\theta$, który próbkuje uzupełnienia)
-3. **Funkcja nagrody** $R(x, y)$ (weryfikator lub reward model), która mapuje pary (prompt, wyjście) na skalarne nagrody
-4. Opcjonalne ograniczenia (reguły formatu, reguły bezpieczeństwa itp.)
+1. **Rozkład promptów** $p(x)$ (praktycznie: twój zbiór danych / dataset)
+2. **Policy** $\pi_\theta(y | x)$ (czyli model jako strategia generowania; parametry $\theta$)
+3. **Funkcja nagrody** $R(x, y)$ (weryfikator/scorer albo model nagrody), która mapuje pary (prompt, wyjście) na skalarne nagrody
+4. Opcjonalne ograniczenia (np. reguły formatu, reguły bezpieczeństwa)
 
 > **Tłumaczenie matematyczne:**
 > * $p(x)$: Jak często różne prompty pojawiają się w świecie rzeczywistym (lub w twoim datasecie).
@@ -70,7 +93,7 @@ Ten kurs czyni te komponenty jawnymi i ściśle zdefiniowanymi, tworząc uproszc
 
 ### Specyfikacja jako projektowanie środowiska
 
-Wymóg formatu „Wypisz dokładnie jedną linię: `Final: <int>`" nie jest jedynie preferencją stylistyczną. Stanowi **projektowanie środowiska**.
+Wymóg formatu „Wypisz dokładnie jedną linię: `Final: <int>`" nie jest jedynie preferencją stylistyczną. Stanowi **projekt środowiska**.
 
 Specyfikacja, którą egzekwujesz, determinuje wyniki behawioralne:
 - Nagradzanie „dowolnego ciągu zawierającego gdzieś poprawną liczbę" produkuje jeden wzorzec zachowania.
@@ -117,7 +140,7 @@ Ta pętla nie obejmuje optymalizacji, uczenia ani wyrafinowanych technik. Jest t
 **Formalnie obliczasz statystyki empiryczne:**
 
 * **Średnia nagroda**: $\bar{R} = (1/N) \sum_{i=1}^N R(x_i, y_i)$
-* **Pass rate** (dla binarnych nagród): $\hat{P}_{\text{pass}} = (1/N) \sum_{i=1}^N \mathbb{1}[R(x_i, y_i) = 1]$
+* **Pass rate (odsetek sukcesów)** (dla binarnych nagród): $\hat{P}_{\text{pass}} = (1/N) \sum_{i=1}^N \mathbb{1}[R(x_i, y_i) = 1]$
 
 > **Tłumaczenie matematyczne:**
 > * $\Sigma$ (Sigma) oznacza „zsumuj wszystkie wartości".
@@ -138,13 +161,13 @@ Jeśli nie potrafisz wyartykułować przyczyny niepowodzenia, nie możesz ulepsz
 
 ---
 
-### Loop B — Selection (optymalizacja bez modyfikacji modelu)
+### Loop B — Selekcja (bez uczenia)
 
 **Cel:** „Czy wydajność może być zwiększona poprzez zwiększone zasoby obliczeniowe w czasie inferencji?"
 
 Zamiast generować pojedyncze uzupełnienie na prompt, generujesz **N próbek** $\{y_1, y_2, \dots, y_n\} \sim \pi_\theta(\cdot|x)$ z *tego samego* modelu dla każdego promptu, oceniasz wszystkie próbki i wybierasz tę z najwyższym wynikiem.
 
-**Formalnie operacja selection to:**
+**Formalnie selekcja to:**
 
 **$y^* = \text{argmax}_{y \in \{y_1,\dots,y_n\}} R(x, y)$**
 
@@ -167,17 +190,17 @@ Kluczowa koncepcja:
 > **Tłumaczenie matematyczne:** $ \sim $ oznacza „próbkowane z". $\pi_\theta(\cdot|x)$ to rozkład modelu.
 > pass@k pyta: „Jeśli pozwolę modelowi próbować $k$ razy, jakie jest prawdopodobieństwo, że *co najmniej jedna* z tych prób będzie poprawna?"
 
-Selection poprawia pass@N. Może mieć minimalny wpływ na pass@1, ponieważ samo $\pi_\theta$ pozostaje niezmienione.
+Selekcja podnosi pass@N; pass@1 zwykle się nie zmienia, bo samo $\pi_\theta$ pozostaje niezmienione.
 
 Praktyczne rozważania:
 
-* Selection jest często najszybszą metodą bezpiecznego wdrażania ulepszeń wydajności.
+* Selekcja jest często najszybszą metodą bezpiecznego wdrażania ulepszeń wydajności.
 * Jednak wiąże się z kosztami obliczeniowymi runtime i opóźnieniem.
 * Dodatkowo może maskować fakt, że bazowa policy pozostaje słaba.
 
 ---
 
-### Loop C — Learning (trening Reinforcement Learning)
+### Loop C — Uczenie (trening)
 
 **Cel:** „Czy wydajność pass@1 może być poprawiona poprzez modyfikację samej policy?"
 
@@ -425,7 +448,7 @@ Zanim przejdziesz do kodu implementacji, powinieneś umieć wyartykułować zar�
 
 * „Scorer implementuje funkcję nagrody $R(x, y)$; jeśli $R$ się zmieni, optymalna policy $\pi^*$ się zmieni."
 * „Loop A oblicza statystyki empiryczne $\mathbb{E}[R]$, Loop B wykonuje optymalizację w czasie inferencji $\max_{y \in \text{samples}} R(x,y)$, Loop C wykonuje optymalizację w czasie uczenia $\nabla_\theta \mathbb{E}[R]$."
-* „Selection poprawia pass@N (istnienie dobrej próbki) bez koniecznie poprawiania pass@1 (jakość typowej próbki)."
+* „Selekcja podnosi pass@N (istnienie dobrej próbki) bez poprawy pass@1 (jakość typowej próbki)."
 * „REINFORCE aktualizuje log-prawdopodobieństwa używając gradientów ważonych przez advantage: $\Delta \theta \propto A \cdot \nabla_\theta \log \pi_\theta$."
 * „Regularyzacja KL $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ ogranicza policy do trust region wokół referencji."
 * „Tokenizacja czyni przestrzeń akcji dyskretną; różnice w formatowaniu jak whitespace wpływają na $\pi_\theta(y|x)$ nietrywialnie."
@@ -479,7 +502,7 @@ Ten skrypt wykonuje czysty pomiar. Brak optymalizacji. Brak treningu. Raportowan
 
 ---
 
-### Skrypt 2: Selection (`selection_demo.py`) — Loop B
+### Skrypt 2: Selekcja (`selection_demo.py`) — Loop B
 
 **Cel:** Zwiększ wydajność poprzez zwiększone obliczenia w czasie inferencji bez modyfikacji modelu.
 
@@ -500,11 +523,11 @@ Rozkład modelu $\pi_\theta$ pozostaje niezmieniony. Eksplorujesz większą czę
 * **pass@1** — prawdopodobieństwo, że pierwsza próbka odniesie sukces
 * **pass@N** — prawdopodobieństwo, że co najmniej jedna z $N$ próbek odniesie sukces
 
-Selection znacząco poprawia pass@N. Ma minimalny wpływ na pass@1, ponieważ samo $\pi_\theta$ pozostaje niezmienione.
+Selekcja podnosi pass@N; pass@1 zwykle się nie zmienia, bo samo $\pi_\theta$ pozostaje niezmienione.
 
 ---
 
-### Skrypt 3: Learning (`bandit_train.py`) — Loop C
+### Skrypt 3: Uczenie (`bandit_train.py`) — Loop C
 
 **Cel:** Popraw pass@1 poprzez modyfikację samej policy.
 
@@ -575,8 +598,8 @@ To podobieństwo zasłania fundamentalne różnice:
 | Pętla | Operacja | Co się zmienia |
 |-------|----------|----------------|
 | **A: Ewaluacja** | Zmierz aktualną wydajność | Nic |
-| **B: Selection** | Wybierz najlepszą z $N$ próbek | Które wyjście jest wdrażane |
-| **C: Learning** | Trenuj przez policy gradient | Parametry modelu $\theta$ |
+| **B: Selekcja** | Wybierz najlepszą z $N$ próbek | Które wyjście jest wdrażane |
+| **C: Uczenie** | Trening przez policy gradient | Parametry modelu $\theta$ |
 
 Jeśli nie potrafisz zidentyfikować, która pętla zmieniła się między dwoma przebiegami eksperymentalnymi, twoje porównanie jest nieważne.
 
@@ -590,11 +613,11 @@ Wyartykułuj następujące stwierdzenia, aż staną się intuicyjne:
 
 2. **„Loop A mierzy $\mathbb{E}[R]$. Loop B oblicza $\max R$ po próbkach. Loop C optymalizuje $\nabla_\theta \mathbb{E}[R]$."**
 
-3. **„Selection poprawia pass@N. Trening poprawia pass@1."**
+3. **„Selekcja podnosi pass@N, a trening poprawia pass@1."**
 
 4. **„Advantage $A = R - b$ jest sygnałem uczenia. Dodatni advantage zwiększa prawdopodobieństwo; ujemny advantage je zmniejsza."**
 
-5. **„Kara KL $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ zapobiega reward hacking poprzez ograniczanie dryfu policy."**
+5. **„Kara KL $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ łagodzi reward hacking poprzez ograniczanie dryfu policy."**
 
 6. **„Tekst ma tokeny. Drobne różnice formatowania odpowiadają znacznym różnicom prawdopodobieństwa w przestrzeni tokenów."**
 

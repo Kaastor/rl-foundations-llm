@@ -2,6 +2,12 @@
 
 ---
 
+## Why This Course?
+
+This course teaches you the thinking that prevents expensive mistakes. Most RL tutorials focus on algorithms, but most real-world failures come from broken measurement—you changed the eval instead of improving the model, your reward got hacked, your results aren't reproducible. Here you'll learn to treat reward as a specification (test it like code), separate real improvement from self-deception (Locked Room Rule), and understand *why* RL works (policy gradients, credit assignment, KL constraints) through small experiments you deliberately break and fix. You won't leave with a PPO implementation, but you'll leave able to read production RLHF systems critically and ask the questions that matter: "Is this metric trustworthy? Did the policy actually improve, or did we just pick better samples? What happens when optimization pressure finds the loopholes?" That's the skill gap between running a framework and understanding what it's doing.
+
+---
+
 ## Fundamental Concepts
 
 A Large Language Model (LLM) functions as a probabilistic system: when provided with a prompt $x$, it does not generate a singular, deterministic answer. Rather, it defines a **conditional probability distribution $P(y | x)$** over possible completions $y$, where each token in the completion is sampled sequentially according to the model's learned distribution.
@@ -41,12 +47,12 @@ Consequently, this course is structured around the development of a reliable mea
 Before you start the project levels, keep these concrete details in mind:
 
 - **Python version:** Use Python 3.10+ (if `python3` is older, use `python3.11` or `poetry run`).
-- **How to run:** Scripts are invoked as modules (e.g., `python -m course.eval`). With Poetry: `poetry run python -m course.eval`.
+- **How to run:** Scripts are invoked as modules: `poetry run python -m course.eval`.
 - **Where outputs go:** Runs are written under `runs/<name>/` and typically include `manifest.json`, `results.jsonl`, `summary.json`, and `summary.md`.
 - **Where you edit:** Student surfaces live in `course/assignments/`, reflections in `notes/`, and tests in `tests/`.
 - **Determinism expectation:** Runs should be reproducible; if in doubt, hash `results.jsonl` across repeated runs.
 - **Optional plots:** `--plot` in the KL demo requires matplotlib; if missing, it will skip plotting.
-- **Optional Groq sampling:** Put `GROQ_API_KEY` in a `.env` file and use `python -m course.rollout_sample` to generate real-model rollouts.
+- **Optional Groq sampling:** Put `GROQ_API_KEY` in a `.env` file and use `poetry run python -m course.rollout_sample` to generate real-model rollouts.
 
 ## The Environment: A Controlled System of Prompts and Verification
 
@@ -593,7 +599,7 @@ Articulate the following statements until they are intuitive:
 
 4. **"Advantage $A = R - b$ is the learning signal. Positive advantage increases probability; negative advantage decreases it."**
 
-5. **"KL penalty $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ prevents reward hacking by constraining policy drift."**
+5. **"KL penalty $D_{KL}(\pi_\theta || \pi_{\text{ref}})$ mitigates reward hacking by constraining policy drift."**
 
 6. **"Text has tokens. Minor formatting differences correspond to substantial probability differences in token space."**
 
